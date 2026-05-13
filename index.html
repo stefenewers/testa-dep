@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Testa — Loan Origination Triage</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;font-size:13px;background:#f5f5f5;color:#111827;display:flex;height:100vh;overflow:hidden}
+/* Sidebar */
+#sidebar{width:48px;background:#f5f5f5;border-right:1px solid #e5e7eb;display:flex;flex-direction:column;align-items:center;padding:8px 0;gap:4px;flex-shrink:0}
+#sidebar img{width:32px;height:32px;object-fit:contain;margin-bottom:8px}
+.nav-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#6b7280;transition:background .15s,color .15s}
+.nav-icon:hover{background:#e5e7eb;color:#374151}
+.nav-icon.active{background:#EEF2FF;color:#4F46E5}
+.nav-icon svg{width:18px;height:18px}
+/* Main */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+/* Views */
+.view{display:none;flex:1;overflow:hidden;flex-direction:column}
+.view.active{display:flex}
+/* Pipeline */
+#view-pipeline{background:#fff}
+.view-header{padding:16px 20px 12px;border-bottom:1px solid #e5e7eb;font-size:14px;font-weight:600;color:#111827}
+.pipeline-table{width:100%;border-collapse:collapse;font-size:13px}
+.pipeline-table th{text-align:left;padding:8px 16px;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid #e5e7eb;background:#f9fafb}
+.pipeline-table td{padding:10px 16px;border-bottom:1px solid #f3f4f6;vertical-align:middle}
+.pipeline-table tr:hover td{background:#f9fafb;cursor:pointer}
+.stage-pill{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:500;background:#EEF2FF;color:#4F46E5}
+.issue-badge{display:inline-block;padding:1px 7px;border-radius:10px;font-size:11px;font-weight:600;background:#FEF2F2;color:#dc2626}
+.task-link{color:#4F46E5;text-decoration:none;font-weight:500}
+.loan-id{font-family:'Courier New',monospace;font-size:12px;color:#4F46E5}
+/* Triage Queue */
+#view-triage{flex-direction:row}
+#triage-list{width:320px;flex-shrink:0;border-right:1px solid #e5e7eb;background:#fff;overflow-y:auto;display:flex;flex-direction:column}
+.triage-header{padding:14px 16px 10px;border-bottom:1px solid #e5e7eb;font-size:13px;font-weight:600;color:#111827;flex-shrink:0}
+.issue-item{padding:12px 16px;border-bottom:1px solid #f3f4f6;cursor:pointer;transition:background .12s}
+.issue-item:hover{background:#f9fafb}
+.issue-item.active{background:#EEF2FF;border-left:2px solid #4F46E5}
+.issue-item-title{font-weight:500;color:#111827;margin-bottom:3px;font-size:12.5px;line-height:1.4}
+.issue-item-meta{font-size:11px;color:#6b7280;display:flex;gap:8px;align-items:center;margin-bottom:4px}
+.issue-item-loan{font-size:11px;color:#4F46E5;font-family:'Courier New',monospace}
+.type-badge{display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:.02em}
+.sev-high{background:#FEF2F2;color:#dc2626}
+.sev-med{background:#FFFBEB;color:#d97706}
+.sev-low{background:#F0FDF4;color:#16a34a}
+.type-agent{background:#EEF2FF;color:#4F46E5}
+.type-rule{background:#FDF4FF;color:#9333ea}
+.type-cond{background:#FFFBEB;color:#d97706}
+.type-doc{background:#FFF7ED;color:#ea580c}
+.type-miss{background:#F0FDF4;color:#16a34a}
+.type-int{background:#FEF2F2;color:#dc2626}
+/* Investigation Panel */
+#investigation-panel{flex:1;overflow-y:auto;background:#fff;display:flex;flex-direction:column}
+.inv-empty{flex:1;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:13px}
+.inv-content{padding:20px 24px;max-width:860px}
+.inv-issue-header{margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #e5e7eb}
+.inv-issue-title{font-size:15px;font-weight:600;color:#111827;margin-bottom:8px}
+.inv-badges{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.inv-loan-stats{font-size:12px;color:#6b7280;font-family:'Courier New',monospace}
+.section-label{font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;margin-top:16px}
+.data-block{background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:12px 14px;margin-bottom:10px}
+.data-block-title{font-size:11px;font-weight:600;color:#4F46E5;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+.data-row{display:flex;gap:8px;padding:3px 0;border-bottom:1px solid #f3f4f6;font-size:12px}
+.data-row:last-child{border-bottom:none}
+.data-key{color:#6b7280;min-width:160px;flex-shrink:0}
+.data-val{color:#111827;font-family:'Courier New',monospace;font-size:11.5px}
+.warn-text{color:#d97706;font-size:12px;margin-top:4px}
+.error-text{color:#dc2626;font-size:12px;margin-top:4px}
+.cot-list{list-style:none;padding:0}
+.cot-list li{padding:3px 0 3px 12px;border-left:2px solid #e5e7eb;margin-bottom:4px;font-size:12px;color:#374151;position:relative}
+.cot-list li::before{content:'→';position:absolute;left:-10px;color:#9ca3af;font-size:10px;top:4px}
+textarea.diagnosis{width:100%;border:1px solid #d1d5db;border-radius:6px;padding:10px 12px;font-size:12.5px;font-family:'Inter',sans-serif;resize:vertical;min-height:80px;color:#111827;outline:none;transition:border .15s}
+textarea.diagnosis:focus{border-color:#4F46E5}
+.action-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.btn{padding:7px 14px;border-radius:6px;font-size:12.5px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:all .15s;font-family:'Inter',sans-serif}
+.btn-primary{background:#4F46E5;color:#fff;border-color:#4F46E5}
+.btn-primary:hover{background:#4338CA}
+.btn-secondary{background:#fff;color:#374151;border-color:#d1d5db}
+.btn-secondary:hover{background:#f9fafb}
+.btn-danger{background:#fff;color:#dc2626;border-color:#fca5a5}
+.btn-danger:hover{background:#FEF2F2}
+.btn-warning{background:#fff;color:#d97706;border-color:#fcd34d}
+.btn-warning:hover{background:#FFFBEB}
+.resolution-section{margin-top:16px;padding-top:16px;border-top:1px solid #e5e7eb}
+.resolution-title{font-size:12px;font-weight:600;color:#374151;margin-bottom:10px}
+.inline-confirm{padding:8px 12px;background:#F0FDF4;border:1px solid #bbf7d0;border-radius:6px;font-size:12px;color:#16a34a;margin-top:10px}
+/* Escalation modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:10px;width:560px;max-height:80vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.18)}
+.modal-header{padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center}
+.modal-title{font-size:14px;font-weight:600}
+.modal-close{cursor:pointer;color:#6b7280;font-size:18px;line-height:1;background:none;border:none}
+.modal-body{padding:20px}
+.form-group{margin-bottom:14px}
+.form-label{display:block;font-size:12px;font-weight:500;color:#374151;margin-bottom:4px}
+.form-input,.form-select,.form-textarea{width:100%;border:1px solid #d1d5db;border-radius:6px;padding:7px 10px;font-size:12.5px;font-family:'Inter',sans-serif;color:#111827;outline:none}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:#4F46E5}
+.form-textarea{resize:vertical;min-height:70px}
+.modal-footer{padding:12px 20px;border-top:1px solid #e5e7eb;display:flex;justify-content:flex-end;gap:8px}
+/* Loan File */
+#view-loan{background:#fff;overflow:hidden}
+.loan-header{padding:8px 20px;background:#fff;border-bottom:1px solid #e5e7eb;font-size:12px;color:#374151;display:flex;align-items:center;gap:12px;flex-wrap:wrap;flex-shrink:0}
+.loan-header .loan-id-h{font-family:'Courier New',monospace;font-size:12px;font-weight:700;color:#4F46E5}
+.loan-header .sep{color:#d1d5db}
+.metric-item{display:inline-flex;align-items:center;gap:3px}
+.metric-label{color:#9ca3af;font-size:11px}
+.metric-val{font-weight:600;font-size:12px;font-family:'Courier New',monospace}
+.metric-val.indigo{color:#4F46E5}
+.metric-val.red{color:#dc2626}
+.back-btn{color:#4F46E5;cursor:pointer;font-size:12px;font-weight:500;display:flex;align-items:center;gap:4px;padding:4px 0}
+/* Tabs */
+.tabs-bar{display:flex;border-bottom:1px solid #e5e7eb;padding:0 20px;background:#fff;flex-shrink:0;overflow-x:auto}
+.tab{padding:10px 14px;font-size:13px;font-weight:500;color:#6b7280;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:color .15s,border-color .15s}
+.tab:hover{color:#374151}
+.tab.active{color:#4F46E5;border-bottom-color:#4F46E5}
+.tab-content{display:none;flex:1;overflow-y:auto;padding:20px}
+.tab-content.active{display:block}
+/* Cards */
+.cards-row{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:14px 16px;flex:1;min-width:140px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.card-label{font-size:11px;color:#9ca3af;font-weight:500;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.card-val{font-size:18px;font-weight:600;color:#111827}
+.card-val.indigo{color:#4F46E5}
+.card-sub{font-size:11px;color:#6b7280;margin-top:2px}
+/* Tables in tabs */
+.data-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.data-table th{text-align:left;padding:7px 12px;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid #e5e7eb;background:#f9fafb}
+.data-table td{padding:9px 12px;border-bottom:1px solid #f3f4f6;vertical-align:top}
+.data-table tr:hover td{background:#f9fafb}
+.status-satisfied{color:#16a34a;font-weight:500}
+.status-pending{color:#d97706;font-weight:500}
+.status-open{color:#dc2626;font-weight:500}
+.status-processing{color:#d97706;font-weight:500}
+.status-classified{color:#16a34a;font-weight:500}
+.flag-amber{color:#d97706;font-size:11px;margin-top:2px}
+.flag-red{color:#dc2626;font-size:11px;margin-top:2px}
+.flag-green{color:#16a34a;font-size:11px}
+/* Agent tasks */
+.agent-task{border:1px solid #e5e7eb;border-radius:8px;margin-bottom:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.agent-task-header{padding:12px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;background:#fff;transition:background .12s}
+.agent-task-header:hover{background:#f9fafb}
+.task-name{font-weight:500;color:#111827;flex:1;font-size:13px}
+.task-status{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+.ts-completed{background:#F0FDF4;color:#16a34a}
+.ts-failed{background:#FEF2F2;color:#dc2626}
+.ts-errors{background:#FFFBEB;color:#d97706}
+.ts-stuck{background:#FFF7ED;color:#ea580c}
+.ts-nottriggered{background:#F3F4F6;color:#6b7280}
+.task-ts{font-family:'Courier New',monospace;font-size:11px;color:#9ca3af}
+.agent-task-body{padding:12px 16px;border-top:1px solid #f3f4f6;background:#f9fafb;display:none}
+.agent-task-body.open{display:block}
+.cot-section{margin-bottom:10px}
+.cot-title{font-size:11px;font-weight:600;color:#4F46E5;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
+.output-box{background:#fff;border:1px solid #e5e7eb;border-radius:4px;padding:8px 10px;font-size:12px;color:#374151}
+.warn-box{background:#FFFBEB;border:1px solid #fde68a;border-radius:4px;padding:8px 10px;font-size:12px;color:#92400e;margin-top:6px}
+.error-box{background:#FEF2F2;border:1px solid #fca5a5;border-radius:4px;padding:8px 10px;font-size:12px;color:#991b1b;margin-top:6px}
+/* Audit trail */
+.audit-entry{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid #f3f4f6}
+.audit-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.dot-system{background:#9ca3af}
+.dot-agent{background:#4F46E5}
+.dot-rules_engine{background:#9333ea}
+.dot-loan_officer{background:#3b82f6}
+.dot-borrower{background:#16a34a}
+.dot-analyst{background:#f59e0b}
+.audit-ts{font-family:'Courier New',monospace;font-size:11px;color:#9ca3af;min-width:175px;flex-shrink:0}
+.audit-event{font-size:12.5px;color:#374151;flex:1}
+.audit-actor{font-size:11px;color:#9ca3af;min-width:80px;text-align:right}
+/* JSON tab */
+#json-view{background:#1e1e2e;border-radius:8px;padding:16px;font-family:'Courier New',monospace;font-size:12px;line-height:1.7;overflow-x:auto;white-space:pre;color:#cdd6f4}
+.jk{color:#89b4fa} /* keys */
+.jv-s{color:#a6e3a1} /* string */
+.jv-n{color:#fab387} /* number */
+.jv-b{color:#cba6f7} /* bool */
+.jv-null{color:#f38ba8} /* null */
+/* Two col layout for loan overview */
+.two-col{display:flex;gap:16px}
+.col-main{flex:1}
+.col-side{width:240px;flex-shrink:0}
+.tasks-list-mini .tl-item{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:12.5px}
+.tl-item-name{color:#4F46E5;font-weight:500;cursor:pointer}
+.tl-item-meta{font-size:11px;color:#9ca3af;margin-top:1px}
+.tl-assign{font-size:11px;color:#4F46E5;cursor:pointer}
+.key-dates-panel{background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:14px}
+.kd-title{font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px}
+.kd-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f3f4f6;font-size:12px}
+.kd-row:last-child{border-bottom:none}
+.kd-label{color:#6b7280}
+.kd-val{font-weight:500;color:#111827;font-family:'Courier New',monospace;font-size:11px}
+.link-status{display:flex;align-items:center;gap:6px;font-size:12px}
+.check-green::before{content:'✓';color:#16a34a;font-weight:700}
+.warn-amber::before{content:'⚠';color:#d97706}
+.editable-field-row{display:flex;gap:8px;align-items:center;margin-top:8px}
+.edit-input{border:1px solid #d1d5db;border-radius:4px;padding:5px 8px;font-size:12.5px;font-family:'Courier New',monospace;width:120px}
+.section-title{font-size:13px;font-weight:600;color:#111827;margin-bottom:12px}
+.table-wrapper{border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.highlight-row td{background:#FFFBEB}
+.cond-doc-note{font-size:11px;color:#d97706;margin-top:2px}
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div id="sidebar">
+  <img src="logo.png" alt="Testa">
+  <div class="nav-icon active" id="nav-pipeline" title="Pipeline" onclick="showView('pipeline')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+  </div>
+  <div class="nav-icon" id="nav-triage" title="Triage Queue" onclick="showView('triage')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+  </div>
+  <div class="nav-icon" id="nav-loan" title="Loan File" onclick="showView('loan')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+  </div>
+</div>
+
+<!-- Main -->
+<div id="main">
+
+  <!-- VIEW: Pipeline -->
+  <div class="view active" id="view-pipeline">
+    <div class="view-header">Pipeline <span style="font-weight:400;color:#6b7280;font-size:12px;margin-left:8px">6 loans</span></div>
+    <div style="flex:1;overflow-y:auto;background:#fff">
+      <table class="pipeline-table">
+        <thead>
+          <tr>
+            <th>Loan</th><th>Borrower</th><th>Stage</th><th>Amount</th><th>Closing</th><th>Tasks</th><th>Issues</th>
+          </tr>
+        </thead>
+        <tbody id="pipeline-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- VIEW: Triage Queue -->
+  <div class="view" id="view-triage">
+    <div id="triage-list">
+      <div class="triage-header">Triage Queue <span style="font-weight:400;color:#6b7280;font-size:12px" id="triage-count"></span></div>
+      <div id="triage-items"></div>
+    </div>
+    <div id="investigation-panel">
+      <div class="inv-empty" id="inv-empty">Select an issue to investigate</div>
+      <div class="inv-content" id="inv-content" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- VIEW: Loan File -->
+  <div class="view" id="view-loan">
+    <div id="loan-header-bar"></div>
+    <div class="tabs-bar" id="loan-tabs">
+      <div class="tab active" onclick="showTab('overview')">Overview</div>
+      <div class="tab" onclick="showTab('liabilities')">Liabilities</div>
+      <div class="tab" onclick="showTab('income')">Income</div>
+      <div class="tab" onclick="showTab('assets')">Assets</div>
+      <div class="tab" onclick="showTab('conditions')">Conditions</div>
+      <div class="tab" onclick="showTab('documents')">Documents</div>
+      <div class="tab" onclick="showTab('agent-tasks')">Agent Tasks</div>
+      <div class="tab" onclick="showTab('audit-trail')">Audit Trail</div>
+      <div class="tab" onclick="showTab('loan-json')">Loan JSON</div>
+    </div>
+    <div style="flex:1;overflow:hidden;display:flex;flex-direction:column">
+      <div class="tab-content active" id="tab-overview"></div>
+      <div class="tab-content" id="tab-liabilities"></div>
+      <div class="tab-content" id="tab-income"></div>
+      <div class="tab-content" id="tab-assets"></div>
+      <div class="tab-content" id="tab-conditions"></div>
+      <div class="tab-content" id="tab-documents"></div>
+      <div class="tab-content" id="tab-agent-tasks"></div>
+      <div class="tab-content" id="tab-audit-trail"></div>
+      <div class="tab-content" id="tab-loan-json"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Escalation Modal -->
+<div class="modal-overlay" id="esc-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Escalate to Engineering</span>
+      <button class="modal-close" onclick="closeEscModal()">×</button>
+    </div>
+    <div class="modal-body" id="esc-modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeEscModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitEscalation()">Submit Escalation</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── DATA ───────────────────────────────────────────────────────────────────
+
+const loanData = {
+  "loanId":"APP-1041","createdAt":"2026-05-01T08:32:00Z","updatedAt":"2026-05-13T11:47:00Z","stage":"PROCESSING","uwDecision":"PENDING",
+  "borrower":{"id":"BRW-8821","firstName":"Marcus","lastName":"Webb","email":"marcus.webb@email.com","phone":"404-555-0182","ssn":"***-**-6842","dateOfBirth":"1984-07-14"},
+  "property":{"address":"1842 Oakwood Dr","city":"Atlanta","state":"GA","zip":"30301","county":"Fulton","estimatedValue":538000,"propertyType":"SINGLE_FAMILY","occupancy":"PRIMARY_RESIDENCE","yearBuilt":2003},
+  "loan":{"amount":420000,"purpose":"PURCHASE","type":"CONVENTIONAL","program":"30_YEAR_FIXED","interestRate":6.875,"lienType":"FIRST_LIEN","closingDate":"2026-06-15","originationChannel":"RETAIL"},
+  "metrics":{"ltv":0.78,"cltv":0.78,"hcltv":0.78,"dti":0.42,"frontEndDti":0.28,"fico":710,"qualifiedIncome":67200,"qualifiedIncomeCorrected":69600,"cashToClose":124800,"reservesMonths":3.2},
+  "liabilities":[
+    {"id":"LIAB-001","type":"MORTGAGE","creditor":"Chase Home Lending","monthlyPayment":1840,"balance":287000,"propertyAddress":"456 Maple Ave, Decatur GA 30030","linkedPropertyId":"PROP-002","linkedAt":"2026-05-01T09:14:00Z","linkedBy":"agent","warning":null},
+    {"id":"LIAB-002","type":"MORTGAGE","creditor":"Wells Fargo Home Mortgage","monthlyPayment":1240,"balance":198000,"propertyAddress":"123 Birchwood Ln, Marietta GA 30060","linkedPropertyId":null,"linkedAt":null,"linkedBy":null,"warning":"NOT_LINKED_TO_OWNED_PROPERTY"}
+  ],
+  "income":[
+    {"id":"INC-001","type":"W2_EMPLOYMENT","employer":"ABC Corporation","monthlyAmount":4800,"annualAmount":57600,"verificationStatus":"VERIFIED","verifiedBy":"agent","verifiedAt":"2026-05-01T10:02:00Z","grossUpApplied":false,"grossUpFactor":null,"source":"pay_stubs"},
+    {"id":"INC-002","type":"SOCIAL_SECURITY","employer":null,"monthlyAmount":800,"annualAmount":9600,"annualAmountCorrected":12000,"verificationStatus":"VERIFIED","verifiedBy":"agent","verifiedAt":"2026-05-01T10:02:00Z","grossUpApplied":false,"grossUpFactor":1.25,"grossUpRequired":true,"grossUpNote":"Fannie Mae B3-3.1-09: Non-taxable SS income may be grossed up 25%. Borrower does not file taxes on SS income. Gross-up not applied by agent.","source":"ss_award_letter"}
+  ],
+  "assets":{"bankAccounts":[{"id":"ACCT-001","institution":"Bank of America","accountType":"CHECKING","accountNumberMasked":"****4821","balance":34200,"statementsOnFile":["bank_stmt_jan_2026.pdf","bank_stmt_feb_2026.pdf","bank_stmt_march_2026.pdf"],"transactions":[
+    {"date":"2026-03-02","description":"Direct Deposit – ABC Corporation","amount":4200,"type":"CREDIT","flagged":false,"flagReason":null,"conditionId":null},
+    {"date":"2026-03-08","description":"ACH Deposit – External Transfer","amount":12500,"type":"CREDIT","flagged":false,"flagReason":null,"conditionId":null,"agentMissed":true,"agentMissedNote":"Deposit exceeds $10,000 Fannie Mae threshold. Agent did not flag. No condition created."},
+    {"date":"2026-03-15","description":"Direct Deposit – ABC Corporation","amount":4200,"type":"CREDIT","flagged":false,"flagReason":null,"conditionId":null},
+    {"date":"2026-03-22","description":"Incoming Wire Transfer","amount":20000,"type":"CREDIT","flagged":true,"flagReason":"Single deposit exceeds $10,000. Fannie Mae guidelines require letter of explanation.","conditionId":"COND-008","flaggedBy":"agent","flaggedAt":"2026-05-01T10:18:00Z"}
+  ]}]},
+  "conditions":[
+    {"id":"COND-001","description":"Provide signed purchase agreement","assignedTo":"BORROWER","status":"SATISFIED","createdAt":"2026-05-01T08:45:00Z","satisfiedAt":"2026-05-02T14:22:00Z","satisfiedBy":"agent","documentId":"DOC-003"},
+    {"id":"COND-002","description":"Provide 2 months pay stubs","assignedTo":"BORROWER","status":"SATISFIED","createdAt":"2026-05-01T08:45:00Z","satisfiedAt":"2026-05-03T09:10:00Z","satisfiedBy":"agent","documentId":"DOC-005"},
+    {"id":"COND-003","description":"Provide 2024 and 2025 W-2s","assignedTo":"BORROWER","status":"SATISFIED","createdAt":"2026-05-01T08:45:00Z","satisfiedAt":"2026-05-03T09:11:00Z","satisfiedBy":"agent","documentId":"DOC-006"},
+    {"id":"COND-004","description":"Provide 3 months bank statements","assignedTo":"BORROWER","status":"SATISFIED","createdAt":"2026-05-01T08:45:00Z","satisfiedAt":"2026-05-04T11:00:00Z","satisfiedBy":"agent","documentId":"DOC-008"},
+    {"id":"COND-007","description":"Provide letter of explanation for employment gap (June–September 2024)","assignedTo":"BORROWER","status":"PENDING_BORROWER","createdAt":"2026-05-06T14:30:00Z","satisfiedAt":null,"satisfiedBy":null,"documentId":null,"documentUploaded":"DOC-011","documentUploadedAt":"2026-05-13T11:16:00Z","note":"Document uploaded but condition not auto-satisfied. Agent condition review ran at 11:19 AM – no entry for this condition in agent log."},
+    {"id":"COND-008","description":"Provide letter of explanation for $20,000 wire transfer received 03/22/2026","assignedTo":"BORROWER","status":"OPEN","createdAt":"2026-05-01T10:18:00Z","satisfiedAt":null,"satisfiedBy":null,"documentId":null}
+  ],
+  "documents":[
+    {"id":"DOC-001","filename":"drivers_license_front.pdf","type":"GOVERNMENT_ID","uploadedAt":"2026-05-01T08:40:00Z","uploadedBy":"borrower","classificationStatus":"CLASSIFIED","classifiedAt":"2026-05-01T08:41:28Z","classifiedBy":"doc_intelligence","linkedTo":"BRW-8821"},
+    {"id":"DOC-003","filename":"purchase_agreement_signed.pdf","type":"PURCHASE_AGREEMENT","uploadedAt":"2026-05-01T09:30:00Z","uploadedBy":"loan_officer","classificationStatus":"CLASSIFIED","classifiedAt":"2026-05-01T09:31:44Z","classifiedBy":"doc_intelligence","linkedTo":"APP-1041"},
+    {"id":"DOC-005","filename":"paystubs_april_may_2026.pdf","type":"PAY_STUB","uploadedAt":"2026-05-02T10:15:00Z","uploadedBy":"borrower","classificationStatus":"CLASSIFIED","classifiedAt":"2026-05-02T10:16:12Z","classifiedBy":"doc_intelligence","linkedTo":"INC-001"},
+    {"id":"DOC-008","filename":"bank_stmt_jan_feb_2026.pdf","type":"BANK_STATEMENT","uploadedAt":"2026-05-04T10:50:00Z","uploadedBy":"borrower","classificationStatus":"CLASSIFIED","classifiedAt":"2026-05-04T10:51:33Z","classifiedBy":"doc_intelligence","linkedTo":"ACCT-001"},
+    {"id":"DOC-010","filename":"bank_stmt_march_2026.pdf","type":null,"uploadedAt":"2026-05-13T10:14:00Z","uploadedBy":"borrower","classificationStatus":"PROCESSING","classifiedAt":null,"classifiedBy":null,"linkedTo":null,"processingNote":"Classification job started at 10:14:03Z. No completion event. Duration: 2h 3m and counting. All other documents on this loan classified in under 90 seconds."},
+    {"id":"DOC-011","filename":"employment_gap_loe.pdf","type":"LETTER_OF_EXPLANATION_EMPLOYMENT","uploadedAt":"2026-05-13T11:16:00Z","uploadedBy":"borrower","classificationStatus":"CLASSIFIED","classifiedAt":"2026-05-13T11:17:08Z","classifiedBy":"doc_intelligence","linkedTo":"BRW-8821","conditionSatisfiedAt":null,"note":"Classified correctly. Condition COND-007 not satisfied. Agent condition review ran at 11:19 AM and did not process this document against COND-007."}
+  ],
+  "agentTasks":[
+    {"id":"TASK-001","name":"Order credit and initialize automations","objective":"Pull credit report for all borrowers, enable compliance monitoring, order closing costs","status":"COMPLETED","startedAt":"2026-05-01T08:33:00Z","completedAt":"2026-05-01T08:41:00Z","chainOfThought":["Identified 1 borrower on file: Marcus Webb (BRW-8821)","Submitted credit pull request to Equifax – awaiting response","Credit returned: Classic FICO 710, VantageScore 724. 2 mortgage tradelines, 4 open tradelines, 0 derogatory","Compliance monitoring enabled – RESPA, TRID timelines initialized","Closing cost estimate pulled from Lodestar – $11,240 estimated"],"output":"Credit pulled successfully. FICO 710. Compliance monitoring active. Closing costs estimated."},
+    {"id":"TASK-002","name":"Link mortgage liabilities to owned properties","objective":"Review mortgage liabilities pulled from credit and link each to the correct owned property using mortgage statements on file","status":"FAILED","startedAt":"2026-05-01T09:15:00Z","completedAt":"2026-05-01T09:16:44Z","chainOfThought":["Found 2 mortgage liabilities on credit report: Chase (456 Maple Ave) and Wells Fargo (123 Birchwood Ln)","Searching documents on file for mortgage statements...","Found mortgage_stmt_456maple.pdf – matched to Chase liability at 456 Maple Ave. Linked successfully.","Searching for mortgage statement for 123 Birchwood Ln – no document found matching this address","Cannot link Wells Fargo liability – no statement available. Task failed for this liability."],"output":"LIAB-001 linked to PROP-002 (456 Maple Ave). LIAB-002 (123 Birchwood Ln) could not be linked – no mortgage statement on file.","error":"MISSING_DOCUMENT: No mortgage statement found for 123 Birchwood Ln"},
+    {"id":"TASK-003","name":"Calculate qualified income","objective":"Calculate total qualified income from all income documents using Fannie Mae guidelines. Annualize pay stub income. Apply gross-up to non-taxable income sources where applicable.","status":"COMPLETED_WITH_ERRORS","startedAt":"2026-05-01T10:00:00Z","completedAt":"2026-05-01T10:03:22Z","chainOfThought":["Found 2 income sources: W-2 employment (ABC Corp) and Social Security","W-2 income: most recent pay stub shows $4,800/month gross. Annualized: $57,600. Verified against 2 months pay stubs.","Social Security: SS award letter shows $800/month. Annualized: $9,600. Applied standard annualization.","Total qualified income: $67,200. Added loan note with income breakdown."],"output":"Qualified income calculated: $67,200/year. W-2: $57,600. SS: $9,600.","warning":"GROSS_UP_NOT_APPLIED: Social Security income annualized at face value. Fannie Mae B3-3.1-09 permits 25% gross-up for non-taxable SS income. Gross-up was not applied. Corrected figure would be $12,000 SS / $69,600 total."},
+    {"id":"TASK-004","name":"Review assets and flag large deposits","objective":"Review all bank statements on file. Flag any single deposit or withdrawal exceeding $10,000. Create LOE conditions for flagged items. Run asset calculator and apply recommended updates.","status":"COMPLETED_WITH_ERRORS","startedAt":"2026-05-01T10:10:00Z","completedAt":"2026-05-01T10:22:00Z","chainOfThought":["Bank statements on file: Jan 2026, Feb 2026. March 2026 statement not yet available (still processing).","Reviewed Jan statement: 8 transactions. No single deposit or withdrawal exceeds $10,000.","Reviewed Feb statement: 6 transactions. No single deposit or withdrawal exceeds $10,000.","March statement classification still pending – skipped.","Found 1 flagged item in reviewed statements: $20,000 wire transfer on 03/22. Created condition COND-008.","Asset calculator run. Current balance $34,200. Reserves: 3.2 months. No updates required."],"output":"1 large deposit flagged. COND-008 created for $20,000 wire transfer. Asset calculator complete.","warning":"INCOMPLETE_REVIEW: March 2026 bank statement was not reviewed – classification still pending at time of task execution. $12,500 ACH deposit on 03/08 was not reviewed or flagged."},
+    {"id":"TASK-005","name":"Review conditions and satisfy where possible","objective":"Review all open conditions. For each condition in PENDING_BORROWER status, check if a matching document has been uploaded. If so, review the document and satisfy the condition if it meets requirements.","status":"COMPLETED_WITH_ERRORS","startedAt":"2026-05-13T11:19:00Z","completedAt":"2026-05-13T11:21:14Z","chainOfThought":["Found 2 open conditions: COND-007 (Employment gap LOE) and COND-008 (Wire transfer LOE)","COND-008: No document uploaded. Skipping.","COND-007: Status is PENDING_BORROWER. Checking for uploaded LOE documents...","Query returned 0 documents of type LETTER_OF_EXPLANATION linked to COND-007.","No matching document found for COND-007. Skipping."],"output":"0 conditions satisfied. COND-007 and COND-008 remain open.","warning":"CONDITION_MATCH_FAILURE: DOC-011 (employment_gap_loe.pdf) was uploaded and classified as LETTER_OF_EXPLANATION_EMPLOYMENT at 11:17 AM but was not linked to COND-007. Agent query searched by conditionId linkage, not by document type match. DOC-011 conditionId field is null."},
+    {"id":"TASK-006","name":"Trigger AUS after intent to proceed","objective":"After intent to proceed is recorded, rerun AUS via Fannie Mae Desktop Underwriter and update loan with findings","status":"NOT_TRIGGERED","startedAt":null,"completedAt":null,"chainOfThought":[],"output":null,"error":"WORKFLOW_TRIGGER_FAILURE: Intent to proceed recorded at 08:47 AM (APP-1046). AUS trigger automation did not fire. No task created. No error logged. Downstream tasks (income calculation, asset review) are blocked pending AUS findings."},
+    {"id":"TASK-007","name":"Doc Intelligence batch classification","objective":"Classify and link all unprocessed documents uploaded in the last 24 hours","status":"STUCK","startedAt":"2026-05-13T10:14:03Z","completedAt":null,"chainOfThought":["Batch job started. 1 document queued: bank_stmt_march_2026.pdf (DOC-010)","Submitted DOC-010 to classification pipeline...","Awaiting classification result..."],"output":null,"error":"PROCESSING_TIMEOUT: Classification job for DOC-010 has been running for 2h 3m with no completion event. No error returned from classification service. Job appears stuck in processing queue."}
+  ],
+  "auditTrail":[
+    {"id":"EVT-001","timestamp":"2026-05-01T08:32:00Z","event":"Loan file created – APP-1041","actor":"system","actorId":"system"},
+    {"id":"EVT-002","timestamp":"2026-05-01T08:33:00Z","event":"Credit order automation triggered","actor":"system","actorId":"system"},
+    {"id":"EVT-003","timestamp":"2026-05-01T08:41:00Z","event":"Credit pulled successfully – Classic FICO 710, VantageScore 724","actor":"agent","actorId":"TASK-001"},
+    {"id":"EVT-004","timestamp":"2026-05-01T08:41:00Z","event":"2 mortgage liabilities imported from credit report","actor":"system","actorId":"system"},
+    {"id":"EVT-005","timestamp":"2026-05-01T09:15:00Z","event":"Agent task started – LIABILITY_LINK","actor":"agent","actorId":"TASK-002"},
+    {"id":"EVT-006","timestamp":"2026-05-01T09:16:44Z","event":"LIAB-001 linked to 456 Maple Ave (PROP-002)","actor":"agent","actorId":"TASK-002"},
+    {"id":"EVT-007","timestamp":"2026-05-01T09:16:44Z","event":"Agent task failed – LIABILITY_LINK – MISSING_DOCUMENT: no statement for 123 Birchwood Ln","actor":"agent","actorId":"TASK-002"},
+    {"id":"EVT-008","timestamp":"2026-05-01T10:00:00Z","event":"Agent task started – INCOME_CALCULATION","actor":"agent","actorId":"TASK-003"},
+    {"id":"EVT-009","timestamp":"2026-05-01T10:03:22Z","event":"Qualified income set to $67,200. Warning: SS gross-up not applied.","actor":"agent","actorId":"TASK-003"},
+    {"id":"EVT-010","timestamp":"2026-05-01T10:10:00Z","event":"Agent task started – ASSET_REVIEW","actor":"agent","actorId":"TASK-004"},
+    {"id":"EVT-011","timestamp":"2026-05-01T10:18:00Z","event":"Large deposit flagged – $20,000 wire 03/22. COND-008 created.","actor":"agent","actorId":"TASK-004"},
+    {"id":"EVT-012","timestamp":"2026-05-01T10:22:00Z","event":"Asset review complete. March statement skipped – classification pending.","actor":"agent","actorId":"TASK-004"},
+    {"id":"EVT-013","timestamp":"2026-05-13T10:14:03Z","event":"Document uploaded – bank_stmt_march_2026.pdf (DOC-010)","actor":"borrower","actorId":"BRW-8821"},
+    {"id":"EVT-014","timestamp":"2026-05-13T10:14:03Z","event":"Doc Intelligence classification started – DOC-010","actor":"system","actorId":"system"},
+    {"id":"EVT-015","timestamp":"2026-05-13T11:16:00Z","event":"Document uploaded – employment_gap_loe.pdf (DOC-011)","actor":"borrower","actorId":"BRW-8821"},
+    {"id":"EVT-016","timestamp":"2026-05-13T11:17:08Z","event":"DOC-011 classified as LETTER_OF_EXPLANATION_EMPLOYMENT","actor":"system","actorId":"doc_intelligence"},
+    {"id":"EVT-017","timestamp":"2026-05-13T11:19:00Z","event":"Agent task started – CONDITION_REVIEW","actor":"agent","actorId":"TASK-005"},
+    {"id":"EVT-018","timestamp":"2026-05-13T11:21:14Z","event":"Condition review complete. 0 conditions satisfied. DOC-011 not matched to COND-007 – conditionId field null.","actor":"agent","actorId":"TASK-005"}
+  ]
+};
+
+// Pipeline loans
+const loans = [
+  {id:"APP-1041",borrower:"Marcus Webb",stage:"Processing",amount:"$420,000",closing:"06/15/2026",tasks:4,issues:1},
+  {id:"APP-1042",borrower:"Diana Chen",stage:"Underwriting",amount:"$275,000",closing:"07/01/2026",tasks:2,issues:1},
+  {id:"APP-1043",borrower:"James Okafor",stage:"Processing",amount:"$550,000",closing:"06/28/2026",tasks:6,issues:2},
+  {id:"APP-1044",borrower:"Sofia Reyes",stage:"Underwriting",amount:"$310,000",closing:"07/15/2026",tasks:3,issues:1},
+  {id:"APP-1045",borrower:"Trevor Holt",stage:"Pre-closing",amount:"$189,000",closing:"06/01/2026",tasks:1,issues:0},
+  {id:"APP-1046",borrower:"Priya Nair",stage:"Application",amount:"$640,000",closing:"08/01/2026",tasks:2,issues:1}
+];
+
+// Issues state
+const issues = [
+  {id:"ISSUE-001",type:"AGENT_TASK_FAILURE",typeCls:"type-agent",severity:"High",sevCls:"sev-high",loanId:"APP-1041",borrower:"Marcus Webb",openSince:"47 minutes",title:"Liability linking agent failed – no mortgage statement found",status:"open"},
+  {id:"ISSUE-002",type:"RULE_MISFIRE",typeCls:"type-rule",severity:"High",sevCls:"sev-high",loanId:"APP-1042",borrower:"Diana Chen",openSince:"2 hours 14 minutes",title:"Social security income not grossed up – qualified income understated",status:"open"},
+  {id:"ISSUE-003",type:"CONDITION_NOT_SATISFIED",typeCls:"type-cond",severity:"Medium",sevCls:"sev-med",loanId:"APP-1043",borrower:"James Okafor",openSince:"31 minutes",title:"Employment LOE uploaded but condition remains open",status:"open"},
+  {id:"ISSUE-004",type:"DOC_INTELLIGENCE_FAILURE",typeCls:"type-doc",severity:"Medium",sevCls:"sev-med",loanId:"APP-1043",borrower:"James Okafor",openSince:"2 hours 3 minutes",title:"Bank statement uploaded 2 hours ago – still unclassified",status:"open"},
+  {id:"ISSUE-005",type:"MISSING_CONDITION",typeCls:"type-miss",severity:"Medium",sevCls:"sev-med",loanId:"APP-1044",borrower:"Sofia Reyes",openSince:"58 minutes",title:"Agent missed $12,500 deposit – condition never created",status:"open"},
+  {id:"ISSUE-006",type:"INTEGRATION_TIMEOUT",typeCls:"type-int",severity:"High",sevCls:"sev-high",loanId:"APP-1046",borrower:"Priya Nair",openSince:"4 hours 22 minutes",title:"AUS did not run after intent to proceed recorded",status:"open"}
+];
+
+// In-memory state
+let state = {
+  currentView: 'pipeline',
+  currentLoanId: 'APP-1041',
+  currentTab: 'overview',
+  selectedIssueId: null,
+  issueStatuses: {}, // issueId -> 'open'|'investigating'|'resolved'
+  auditTrail: [...loanData.auditTrail],
+  qualifiedIncome: 67200,
+  grossUpApplied: false,
+  conditionStatuses: {
+    'COND-001':'SATISFIED','COND-002':'SATISFIED','COND-003':'SATISFIED','COND-004':'SATISFIED',
+    'COND-007':'PENDING_BORROWER','COND-008':'OPEN'
+  },
+  missingConditionCreated: false,
+  currentEscIssueId: null,
+  evtCounter: 19
+};
+
+function nowTs() {
+  return new Date().toISOString().replace('T',' ').substring(0,19) + 'Z';
+}
+function nowIso() { return new Date().toISOString(); }
+
+function addAuditEntry(event, actor, actorId) {
+  state.evtCounter++;
+  state.auditTrail.unshift({
+    id: 'EVT-'+String(state.evtCounter).padStart(3,'0'),
+    timestamp: nowIso(),
+    event, actor, actorId
+  });
+}
+
+// ─── NAVIGATION ─────────────────────────────────────────────────────────────
+
+function showView(v) {
+  state.currentView = v;
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-icon').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  document.getElementById('nav-'+v).classList.add('active');
+  if(v==='pipeline') renderPipeline();
+  if(v==='triage') renderTriage();
+  if(v==='loan') renderLoan();
+}
+
+function showTab(t) {
+  state.currentTab = t;
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  const tabs = document.querySelectorAll('.tab');
+  const tabMap = ['overview','liabilities','income','assets','conditions','documents','agent-tasks','audit-trail','loan-json'];
+  const idx = tabMap.indexOf(t);
+  if(tabs[idx]) tabs[idx].classList.add('active');
+  const el = document.getElementById('tab-'+t);
+  if(el) el.classList.add('active');
+  renderTab(t);
+}
+
+function openLoan(loanId) {
+  state.currentLoanId = loanId;
+  showView('loan');
+}
+
+// ─── PIPELINE ───────────────────────────────────────────────────────────────
+
+function renderPipeline() {
+  const tbody = document.getElementById('pipeline-tbody');
+  tbody.innerHTML = loans.map(l => `
+    <tr onclick="openLoan('${l.id}')">
+      <td><span class="loan-id">${l.id}</span></td>
+      <td>${l.borrower}</td>
+      <td><span class="stage-pill">${l.stage}</span></td>
+      <td>${l.amount}</td>
+      <td style="font-family:'Courier New',monospace;font-size:12px">${l.closing}</td>
+      <td><a class="task-link">${l.tasks} tasks</a></td>
+      <td>${l.issues > 0 ? `<span class="issue-badge">${l.issues}</span>` : '<span style="color:#9ca3af;font-size:12px">—</span>'}</td>
+    </tr>
+  `).join('');
+}
+
+// ─── TRIAGE ─────────────────────────────────────────────────────────────────
+
+function renderTriage() {
+  const open = issues.filter(i => (state.issueStatuses[i.id]||i.status) !== 'resolved');
+  document.getElementById('triage-count').textContent = open.length + ' active';
+  document.getElementById('triage-items').innerHTML = issues.map(iss => {
+    const st = state.issueStatuses[iss.id] || iss.status;
+    const isActive = state.selectedIssueId === iss.id;
+    return `<div class="issue-item${isActive?' active':''}" onclick="selectIssue('${iss.id}')">
+      <div class="issue-item-title">${iss.title}</div>
+      <div class="issue-item-meta">
+        <span class="type-badge ${iss.typeCls}">${iss.type}</span>
+        <span class="type-badge ${iss.sevCls}">${iss.severity}</span>
+        ${st!=='open'?`<span class="type-badge" style="background:#F3F4F6;color:#6b7280">${st.toUpperCase()}</span>`:''}
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span class="issue-item-loan">${iss.loanId} · ${iss.borrower}</span>
+        <span style="font-size:11px;color:#9ca3af">${iss.openSince}</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  if(state.selectedIssueId) renderInvestigation(state.selectedIssueId);
+}
+
+function selectIssue(id) {
+  state.selectedIssueId = id;
+  if(state.issueStatuses[id] === 'open' || !state.issueStatuses[id]) {
+    state.issueStatuses[id] = 'investigating';
+  }
+  renderTriage();
+}
+
+function renderInvestigation(id) {
+  const iss = issues.find(i => i.id === id);
+  document.getElementById('inv-empty').style.display = 'none';
+  const cont = document.getElementById('inv-content');
+  cont.style.display = 'block';
+  cont.innerHTML = buildInvPanel(iss);
+}
+
+function buildInvPanel(iss) {
+  const st = state.issueStatuses[iss.id] || iss.status;
+  let ctx = '';
+  let actions = '';
+
+  if(iss.id === 'ISSUE-001') {
+    ctx = `
+      <div class="section-label">Agent Task Log · LIABILITY_LINK</div>
+      <div class="data-block">
+        <div class="data-block-title">TASK-002 · Failed · 2026-05-01 09:15–09:16</div>
+        <ul class="cot-list">
+          <li>Found 2 mortgage liabilities on credit report: Chase (456 Maple Ave) and Wells Fargo (123 Birchwood Ln)</li>
+          <li>Searching documents on file for mortgage statements...</li>
+          <li>Found mortgage_stmt_456maple.pdf – matched to Chase liability at 456 Maple Ave. Linked successfully.</li>
+          <li>Searching for mortgage statement for 123 Birchwood Ln – no document found matching this address</li>
+          <li>Cannot link Wells Fargo liability – no statement available. Task failed for this liability.</li>
+        </ul>
+        <div class="error-text">MISSING_DOCUMENT: No mortgage statement found for 123 Birchwood Ln</div>
+      </div>
+      <div class="section-label">Liability Record</div>
+      <div class="data-block">
+        <div class="data-block-title">LIAB-002 · Wells Fargo Home Mortgage</div>
+        <div class="data-row"><span class="data-key">Property</span><span class="data-val">123 Birchwood Ln, Marietta GA 30060</span></div>
+        <div class="data-row"><span class="data-key">Monthly Payment</span><span class="data-val">$1,240</span></div>
+        <div class="data-row"><span class="data-key">Balance</span><span class="data-val">$198,000</span></div>
+        <div class="data-row"><span class="data-key">Linked Property</span><span class="data-val" style="color:#dc2626">null — NOT LINKED</span></div>
+        <div class="data-row"><span class="data-key">Warning</span><span class="data-val" style="color:#d97706">NOT_LINKED_TO_OWNED_PROPERTY</span></div>
+      </div>
+      <div class="section-label">Documents on File (mortgage statements)</div>
+      <div class="data-block">
+        <div class="data-row"><span class="data-key">mortgage_stmt_456maple.pdf</span><span class="data-val">Classified · Linked to LIAB-001</span></div>
+        <div class="data-row"><span class="data-key">123 Birchwood Ln statement</span><span class="data-val" style="color:#dc2626">No document found</span></div>
+      </div>
+    `;
+    actions = `<div class="action-row">
+      <button class="btn btn-primary" onclick="resolveIssue('ISSUE-001','doc-gap')">Mark as doc gap – create borrower task</button>
+      <button class="btn btn-secondary" onclick="resolveIssue('ISSUE-001','rerun')">Re-run agent with manual doc link</button>
+      <button class="btn btn-danger" onclick="openEscModal('ISSUE-001')">Escalate to Engineering</button>
+    </div>`;
+  }
+
+  if(iss.id === 'ISSUE-002') {
+    const applied = state.grossUpApplied;
+    ctx = `
+      <div class="section-label">Agent Task Note · INCOME_CALCULATION</div>
+      <div class="data-block">
+        <div class="data-block-title">TASK-003 · Completed with Errors · 2026-05-01 10:00–10:03</div>
+        <ul class="cot-list">
+          <li>Found 2 income sources: W-2 employment (ABC Corp) and Social Security</li>
+          <li>W-2 income: most recent pay stub shows $4,800/month gross. Annualized: $57,600.</li>
+          <li>Social Security: SS award letter shows $800/month. Annualized: $9,600. Applied standard annualization.</li>
+          <li>Total qualified income: $67,200. Added loan note with income breakdown.</li>
+        </ul>
+        <div class="warn-text">Agent note: "Applied standard annualization. No gross-up applied."</div>
+      </div>
+      <div class="section-label">Income Breakdown</div>
+      <div class="data-block">
+        <div class="data-row"><span class="data-key">W-2 Employment (ABC Corp)</span><span class="data-val">$57,600 / year — verified</span></div>
+        <div class="data-row"><span class="data-key">Social Security (agent calc)</span><span class="data-val">$9,600 / year</span></div>
+        <div class="data-row"><span class="data-key">SS Corrected (25% gross-up)</span><span class="data-val" style="color:#16a34a">$12,000 / year</span></div>
+        <div class="data-row"><span class="data-key">Total Qualified (current)</span><span class="data-val" style="color:#d97706">${applied ? '$69,600':'$67,200'}</span></div>
+        <div class="data-row"><span class="data-key">Total Qualified (corrected)</span><span class="data-val" style="color:#16a34a">$69,600</span></div>
+      </div>
+      <div class="section-label">Fannie Mae Guideline</div>
+      <div class="data-block">
+        <div style="font-size:12px;color:#374151">Fannie Mae B3-3.1-09: For non-taxable income such as Social Security benefits, the lender may gross up 25% if the borrower does not file taxes on that income. The borrower does not file taxes on SS income. The gross-up was not applied by the agent — the qualified income is understated by $2,400.</div>
+      </div>
+      ${applied ? '<div class="inline-confirm">✓ Gross-up correction applied. Qualified income updated to $69,600. Audit trail appended.</div>' : ''}
+    `;
+    actions = `<div class="action-row">
+      ${!applied ? `<button class="btn btn-primary" onclick="applyGrossUp()">Apply gross-up correction</button>` : `<button class="btn btn-secondary" disabled>Correction applied</button>`}
+      <button class="btn btn-danger" onclick="openEscModal('ISSUE-002')">Escalate to Engineering</button>
+    </div>`;
+  }
+
+  if(iss.id === 'ISSUE-003') {
+    ctx = `
+      <div class="section-label">Document Record · DOC-011</div>
+      <div class="data-block">
+        <div class="data-block-title">employment_gap_loe.pdf</div>
+        <div class="data-row"><span class="data-key">Uploaded</span><span class="data-val">2026-05-13 11:16:00Z · borrower</span></div>
+        <div class="data-row"><span class="data-key">Classification</span><span class="data-val" style="color:#16a34a">CLASSIFIED — LETTER_OF_EXPLANATION_EMPLOYMENT</span></div>
+        <div class="data-row"><span class="data-key">Classified At</span><span class="data-val">2026-05-13 11:17:08Z (68 seconds)</span></div>
+        <div class="data-row"><span class="data-key">Linked To</span><span class="data-val">BRW-8821</span></div>
+        <div class="data-row"><span class="data-key">conditionId</span><span class="data-val" style="color:#dc2626">null</span></div>
+      </div>
+      <div class="section-label">Condition Record · COND-007</div>
+      <div class="data-block">
+        <div class="data-block-title">Provide letter of explanation for employment gap (June–September 2024)</div>
+        <div class="data-row"><span class="data-key">Status</span><span class="data-val" style="color:#d97706">${state.conditionStatuses['COND-007']}</span></div>
+        <div class="data-row"><span class="data-key">Assigned To</span><span class="data-val">BORROWER</span></div>
+        <div class="data-row"><span class="data-key">Document Uploaded</span><span class="data-val">DOC-011 · employment_gap_loe.pdf</span></div>
+        <div class="data-row"><span class="data-key">Condition Satisfied At</span><span class="data-val" style="color:#dc2626">null</span></div>
+      </div>
+      <div class="section-label">Agent Task Log · CONDITION_REVIEW (TASK-005)</div>
+      <div class="data-block">
+        <div class="data-block-title">2026-05-13 11:19–11:21 · Completed with Errors</div>
+        <ul class="cot-list">
+          <li>Found 2 open conditions: COND-007 and COND-008</li>
+          <li>COND-008: No document uploaded. Skipping.</li>
+          <li>COND-007: Checking for uploaded LOE documents...</li>
+          <li>Query returned 0 documents of type LETTER_OF_EXPLANATION linked to COND-007.</li>
+          <li>No matching document found for COND-007. Skipping.</li>
+        </ul>
+        <div class="warn-text">Root cause: Agent queries by conditionId linkage. DOC-011 conditionId is null — it was never linked to COND-007. Classification succeeded but the link was never created.</div>
+      </div>
+      ${state.conditionStatuses['COND-007']==='SATISFIED' ? '<div class="inline-confirm">✓ COND-007 manually satisfied by S. Ewers. Audit trail appended.</div>' : ''}
+    `;
+    actions = `<div class="action-row">
+      ${state.conditionStatuses['COND-007']!=='SATISFIED' ? `<button class="btn btn-primary" onclick="satisfyCond007()">Manually satisfy condition</button>` : `<button class="btn btn-secondary" disabled>Condition satisfied</button>`}
+      <button class="btn btn-secondary" onclick="alert('Condition review agent re-triggered. Task queued.')">Re-trigger condition review agent</button>
+      <button class="btn btn-danger" onclick="openEscModal('ISSUE-003')">Escalate to Engineering</button>
+    </div>`;
+  }
+
+  if(iss.id === 'ISSUE-004') {
+    ctx = `
+      <div class="section-label">Document Upload Log</div>
+      <div class="data-block">
+        <div class="data-block-title">DOC-010 · bank_stmt_march_2026.pdf</div>
+        <div class="data-row"><span class="data-key">Uploaded</span><span class="data-val">2026-05-13 10:14:00Z · borrower</span></div>
+        <div class="data-row"><span class="data-key">Classification Status</span><span class="data-val" style="color:#d97706">PROCESSING — stuck 2h 3m</span></div>
+        <div class="data-row"><span class="data-key">Job Started</span><span class="data-val">2026-05-13 10:14:03Z</span></div>
+        <div class="data-row"><span class="data-key">Last Status Event</span><span class="data-val" style="color:#dc2626">No completion event</span></div>
+      </div>
+      <div class="section-label">Classification Timeline — Other Documents (for comparison)</div>
+      <div class="data-block">
+        <div class="data-row"><span class="data-key">drivers_license_front.pdf</span><span class="data-val">Classified in 88 seconds</span></div>
+        <div class="data-row"><span class="data-key">purchase_agreement_signed.pdf</span><span class="data-val">Classified in 104 seconds</span></div>
+        <div class="data-row"><span class="data-key">paystubs_april_may_2026.pdf</span><span class="data-val">Classified in 72 seconds</span></div>
+        <div class="data-row"><span class="data-key">bank_stmt_jan_feb_2026.pdf</span><span class="data-val">Classified in 43 seconds</span></div>
+        <div class="data-row"><span class="data-key">bank_stmt_march_2026.pdf</span><span class="data-val" style="color:#dc2626">2h 3m — no completion event</span></div>
+      </div>
+      <div class="section-label">Downstream Blocked Tasks</div>
+      <div class="data-block">
+        <div class="data-row"><span class="data-key">TASK-004 Asset Review</span><span class="data-val" style="color:#d97706">Completed but skipped March statement — classification pending</span></div>
+        <div class="data-row"><span class="data-key">ISSUE-005</span><span class="data-val" style="color:#dc2626">$12,500 ACH deposit not reviewed — no condition created</span></div>
+      </div>
+    `;
+    actions = `<div class="action-row">
+      <button class="btn btn-primary" onclick="retryDocClass()">Retry Doc Intelligence classification</button>
+      <button class="btn btn-secondary" onclick="manualClassify()">Manually classify document</button>
+      <button class="btn btn-danger" onclick="openEscModal('ISSUE-004')">Escalate to Engineering</button>
+    </div>`;
+  }
+
+  if(iss.id === 'ISSUE-005') {
+    ctx = `
+      <div class="section-label">Agent Task Note · ASSET_REVIEW (TASK-004)</div>
+      <div class="data-block">
+        <div class="data-block-title">March 2026 Bank Statement — Transaction Review</div>
+        <ul class="cot-list">
+          <li>March statement was not reviewed — classification was still pending at time of task execution</li>
+          <li>Jan and Feb statements reviewed: no deposits exceeding $10,000</li>
+          <li>$20,000 wire on 03/22 flagged from previously reviewed data: COND-008 created</li>
+          <li>$12,500 ACH deposit on 03/08 was not reviewed or flagged</li>
+        </ul>
+      </div>
+      <div class="section-label">Transaction List — March 2026</div>
+      <div class="data-block">
+        <div class="data-row"><span class="data-key">03/02 Direct Deposit ABC Corp</span><span class="data-val">+$4,200 — no flag</span></div>
+        <div class="data-row"><span class="data-key">03/08 ACH Deposit External</span><span class="data-val" style="color:#d97706">+$12,500 — exceeds $10K threshold · NO CONDITION CREATED</span></div>
+        <div class="data-row"><span class="data-key">03/15 Direct Deposit ABC Corp</span><span class="data-val">+$4,200 — no flag</span></div>
+        <div class="data-row"><span class="data-key">03/22 Incoming Wire Transfer</span><span class="data-val" style="color:#dc2626">+$20,000 — flagged · COND-008 created</span></div>
+      </div>
+      <div class="section-label">Existing Condition (for reference)</div>
+      <div class="data-block">
+        <div class="data-row"><span class="data-key">COND-008</span><span class="data-val">LOE for $20,000 wire 03/22 · Open</span></div>
+        <div class="data-row"><span class="data-key">Missing</span><span class="data-val" style="color:#dc2626">No condition for $12,500 ACH on 03/08</span></div>
+      </div>
+      ${state.missingConditionCreated ? '<div class="inline-confirm">✓ COND-009 created: LOE for $12,500 ACH deposit on 03/08/2026. Assigned to borrower. Audit trail appended.</div>' : ''}
+    `;
+    actions = `<div class="action-row">
+      ${!state.missingConditionCreated ? `<button class="btn btn-primary" onclick="createMissingCondition()">Create missing condition</button>` : `<button class="btn btn-secondary" disabled>Condition created (COND-009)</button>`}
+      <button class="btn btn-danger" onclick="openEscModal('ISSUE-005')">Escalate to Engineering</button>
+    </div>`;
+  }
+
+  if(iss.id === 'ISSUE-006') {
+    ctx = `
+      <div class="section-label">Audit Trail — Intent to Proceed Event</div>
+      <div class="data-block">
+        <div class="data-row"><span class="data-key">08:47:03Z</span><span class="data-val">Borrower signed disclosures. Intent to proceed recorded. — system</span></div>
+        <div class="data-row"><span class="data-key">08:47:04Z</span><span class="data-val" style="color:#dc2626">Expected: AUS trigger automation to fire. Actual: No event.</span></div>
+        <div class="data-row"><span class="data-key">08:47:05Z–present</span><span class="data-val" style="color:#dc2626">No AUS order attempt. No AUS result. No error logged.</span></div>
+      </div>
+      <div class="section-label">Expected Automation Sequence</div>
+      <div class="data-block">
+        <div class="data-row"><span class="data-key">Step 1</span><span class="data-val">Intent to proceed event fires workflow trigger</span></div>
+        <div class="data-row"><span class="data-key">Step 2</span><span class="data-val">AUS order submitted to Fannie Mae Desktop Underwriter</span></div>
+        <div class="data-row"><span class="data-key">Step 3</span><span class="data-val">DU findings returned and stored on loan</span></div>
+        <div class="data-row"><span class="data-key">Step 4</span><span class="data-val">Income and asset agent tasks proceed using DU findings</span></div>
+      </div>
+      <div class="section-label">Current State — Blocked</div>
+      <div class="data-block">
+        <div class="data-row"><span class="data-key">AUS Status</span><span class="data-val" style="color:#dc2626">Not ordered — no attempt recorded</span></div>
+        <div class="data-row"><span class="data-key">DU Findings</span><span class="data-val" style="color:#dc2626">null</span></div>
+        <div class="data-row"><span class="data-key">Income Calculation</span><span class="data-val" style="color:#d97706">Blocked — awaiting DU findings</span></div>
+        <div class="data-row"><span class="data-key">Asset Review</span><span class="data-val" style="color:#d97706">Blocked — awaiting DU findings</span></div>
+        <div class="data-row"><span class="data-key">Time Open</span><span class="data-val" style="color:#dc2626">4 hours 22 minutes</span></div>
+      </div>
+    `;
+    actions = `<div class="action-row">
+      <button class="btn btn-primary" onclick="triggerAUS()">Manually trigger AUS</button>
+      <button class="btn btn-danger" onclick="openEscModal('ISSUE-006')">Escalate to Engineering</button>
+    </div>`;
+  }
+
+  const st = state.issueStatuses[iss.id] || iss.status;
+
+  return `
+    <div class="inv-issue-header">
+      <div class="inv-issue-title">${iss.title}</div>
+      <div class="inv-badges">
+        <span class="type-badge ${iss.typeCls}">${iss.type}</span>
+        <span class="type-badge ${iss.sevCls}">${iss.severity}</span>
+        <span class="type-badge" style="background:#F3F4F6;color:#6b7280">${st.toUpperCase()}</span>
+        <span style="font-size:11px;color:#9ca3af">Open ${iss.openSince}</span>
+      </div>
+      <div class="inv-loan-stats">${iss.loanId} · ${iss.borrower} · <a style="color:#4F46E5;cursor:pointer" onclick="openLoan('${iss.loanId}')">View loan file →</a></div>
+    </div>
+    <div class="section-label">Investigation Context</div>
+    ${ctx}
+    <div class="section-label">Your Diagnosis</div>
+    <textarea class="diagnosis" id="diag-${iss.id}" placeholder="Describe what you found and why..."></textarea>
+    <div class="resolution-section">
+      <div class="resolution-title">Resolution Actions</div>
+      ${actions}
+    </div>
+    <div id="confirm-${iss.id}"></div>
+  `;
+}
+
+// ─── ISSUE ACTIONS ──────────────────────────────────────────────────────────
+
+function applyGrossUp() {
+  state.grossUpApplied = true;
+  state.qualifiedIncome = 69600;
+  state.issueStatuses['ISSUE-002'] = 'resolved';
+  const diag = document.getElementById('diag-ISSUE-002') ? document.getElementById('diag-ISSUE-002').value : '';
+  addAuditEntry(`SS gross-up correction applied. Qualified income updated to $69,600. ${diag ? 'Diagnosis: '+diag : ''}`, 'analyst', 'S. Ewers');
+  renderTriage();
+}
+
+function satisfyCond007() {
+  state.conditionStatuses['COND-007'] = 'SATISFIED';
+  state.issueStatuses['ISSUE-003'] = 'resolved';
+  const diag = document.getElementById('diag-ISSUE-003') ? document.getElementById('diag-ISSUE-003').value : '';
+  addAuditEntry(`COND-007 manually satisfied. DOC-011 linked to condition. ${diag ? 'Diagnosis: '+diag : ''}`, 'analyst', 'S. Ewers');
+  renderTriage();
+}
+
+function retryDocClass() {
+  state.issueStatuses['ISSUE-004'] = 'investigating';
+  addAuditEntry('Doc Intelligence classification retry triggered for DOC-010 (bank_stmt_march_2026.pdf).', 'analyst', 'S. Ewers');
+  const c = document.getElementById('confirm-ISSUE-004');
+  if(c) c.innerHTML = '<div class="inline-confirm" style="margin-top:10px">✓ Retry triggered. Classification job requeued. Monitor for completion event.</div>';
+}
+
+function manualClassify() {
+  state.issueStatuses['ISSUE-004'] = 'resolved';
+  addAuditEntry('DOC-010 manually classified as BANK_STATEMENT by analyst S. Ewers.', 'analyst', 'S. Ewers');
+  const c = document.getElementById('confirm-ISSUE-004');
+  if(c) c.innerHTML = '<div class="inline-confirm" style="margin-top:10px">✓ DOC-010 manually classified as BANK_STATEMENT. Linked to ACCT-001.</div>';
+}
+
+function createMissingCondition() {
+  state.missingConditionCreated = true;
+  state.issueStatuses['ISSUE-005'] = 'resolved';
+  addAuditEntry('COND-009 created: LOE required for $12,500 ACH deposit on 03/08/2026. Assigned to borrower.', 'analyst', 'S. Ewers');
+  renderTriage();
+}
+
+function triggerAUS() {
+  state.issueStatuses['ISSUE-006'] = 'investigating';
+  addAuditEntry('AUS manually triggered for APP-1046. DU submission queued.', 'analyst', 'S. Ewers');
+  const c = document.getElementById('confirm-ISSUE-006');
+  if(c) c.innerHTML = '<div class="inline-confirm" style="margin-top:10px">✓ AUS trigger submitted manually. DU order queued. Downstream tasks will unblock when findings return.</div>';
+}
+
+function resolveIssue(id, action) {
+  state.issueStatuses[id] = 'resolved';
+  const diag = document.getElementById('diag-'+id) ? document.getElementById('diag-'+id).value : '';
+  const msg = action === 'doc-gap'
+    ? `Doc gap identified for 123 Birchwood Ln. Borrower task created: provide mortgage statement.`
+    : `Agent re-triggered for liability linking with manual doc link.`;
+  addAuditEntry(`${msg} ${diag ? 'Diagnosis: '+diag : ''}`, 'analyst', 'S. Ewers');
+  renderTriage();
+}
+
+// ─── ESCALATION MODAL ───────────────────────────────────────────────────────
+
+function openEscModal(issueId) {
+  state.currentEscIssueId = issueId;
+  const iss = issues.find(i => i.id === issueId);
+  document.getElementById('esc-modal-body').innerHTML = `
+    <div class="form-group"><label class="form-label">Issue Type</label>
+      <input class="form-input" value="${iss.type}" readonly></div>
+    <div class="form-group"><label class="form-label">Affected Loan ID</label>
+      <input class="form-input" value="${iss.loanId}" readonly></div>
+    <div class="form-group"><label class="form-label">Summary of Investigation</label>
+      <textarea class="form-textarea" id="esc-summary" placeholder="Describe what you investigated and what you found...">${document.getElementById('diag-'+issueId) ? document.getElementById('diag-'+issueId).value : ''}</textarea></div>
+    <div class="form-group"><label class="form-label">Steps to Reproduce</label>
+      <textarea class="form-textarea" id="esc-steps" placeholder="Step 1: ...\nStep 2: ..."></textarea></div>
+    <div class="form-group"><label class="form-label">Relevant Data Snapshot</label>
+      <textarea class="form-textarea" id="esc-data" style="font-family:'Courier New',monospace;font-size:11px">${JSON.stringify({issueId:iss.id,loanId:iss.loanId,type:iss.type,severity:iss.severity,openSince:iss.openSince},null,2)}</textarea></div>
+    <div class="form-group"><label class="form-label">Recommended Action</label>
+      <input class="form-input" id="esc-action" placeholder="e.g. Investigate workflow trigger, check automation queue..."></div>
+    <div class="form-group"><label class="form-label">Severity</label>
+      <select class="form-select" id="esc-sev">
+        <option value="P1" ${iss.severity==='High'?'selected':''}>P1 — Critical</option>
+        <option value="P2" ${iss.severity==='Medium'?'selected':''}>P2 — High</option>
+        <option value="P3">P3 — Medium</option>
+      </select></div>
+  `;
+  document.getElementById('esc-modal').classList.add('open');
+}
+
+function closeEscModal() {
+  document.getElementById('esc-modal').classList.remove('open');
+  state.currentEscIssueId = null;
+}
+
+function submitEscalation() {
+  const id = state.currentEscIssueId;
+  const iss = issues.find(i => i.id === id);
+  const summary = document.getElementById('esc-summary').value;
+  const sev = document.getElementById('esc-sev').value;
+  state.issueStatuses[id] = 'escalated';
+  addAuditEntry(`Escalated to Engineering: ${iss.type} on ${iss.loanId}. Severity: ${sev}. Summary: ${summary||'No summary provided.'}`, 'analyst', 'S. Ewers');
+  closeEscModal();
+  if(state.currentView === 'triage') renderTriage();
+  alert('Escalation submitted. Audit trail updated. Engineering team notified.');
+}
+
+// ─── LOAN FILE ──────────────────────────────────────────────────────────────
+
+function renderLoan() {
+  const d = loanData;
+  const dti = d.metrics.dti;
+  const dtiCls = dti > 0.45 ? 'red' : dti > 0.40 ? 'indigo' : '';
+  document.getElementById('loan-header-bar').innerHTML = `
+    <div style="padding:6px 20px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+      <span class="loan-id-h">#${d.loanId}</span>
+      <span class="sep">|</span>
+      <span style="font-weight:500">${d.borrower.firstName} ${d.borrower.lastName}</span>
+      <span class="sep">|</span>
+      <span style="color:#6b7280;font-size:12px">${d.property.address}, ${d.property.city} ${d.property.state} ${d.property.zip}</span>
+      <span class="sep">|</span>
+      <span class="metric-item"><span class="metric-label">LTV:</span> <span class="metric-val">${Math.round(d.metrics.ltv*100)}%</span></span>
+      <span class="metric-item"><span class="metric-label">DTI:</span> <span class="metric-val ${dtiCls}">${Math.round(d.metrics.dti*100)}% ${dti>0.40?'▲':''}</span></span>
+      <span class="metric-item"><span class="metric-label">FICO:</span> <span class="metric-val">${d.metrics.fico}</span></span>
+      <span class="metric-item"><span class="metric-label">Program:</span> <span class="metric-val">Conv 30yr Fixed</span></span>
+      <span class="metric-item"><span class="metric-label">Stage:</span> <span class="stage-pill" style="font-size:11px">${d.stage}</span></span>
+      <span class="metric-item"><span class="metric-label">UW Decision:</span> <span class="metric-val">${d.uwDecision}</span></span>
+    </div>
+  `;
+  showTab(state.currentTab);
+}
+
+function renderTab(t) {
+  const el = document.getElementById('tab-'+t);
+  if(!el) return;
+  const d = loanData;
+
+  if(t==='overview') {
+    el.innerHTML = `
+      <div class="two-col">
+        <div class="col-main">
+          <div class="cards-row">
+            <div class="card"><div class="card-label">Stage</div><div class="card-val indigo" style="font-size:14px">Processing</div></div>
+            <div class="card"><div class="card-label">Closing Date</div><div class="card-val" style="font-size:14px;font-family:'Courier New',monospace">06/15/2026</div></div>
+            <div class="card"><div class="card-label">Open Tasks</div><div class="card-val indigo" style="font-size:14px">4</div></div>
+            <div class="card"><div class="card-label">Open Issues</div><div class="card-val" style="font-size:14px;color:#dc2626">1</div></div>
+          </div>
+          <div class="section-title">Open Tasks</div>
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead><tr><th>Task</th><th>Assigned To</th><th>Due Date</th><th></th></tr></thead>
+              <tbody>
+                <tr><td><a class="task-link">Obtain mortgage statement for 123 Birchwood Ln</a></td><td>—</td><td style="font-family:'Courier New',monospace;font-size:11px">06/01/2026</td><td><button class="btn btn-secondary" style="padding:3px 8px;font-size:11px">Assign</button></td></tr>
+                <tr><td><a class="task-link">Request SS award letter verification</a></td><td>S. Ewers</td><td style="font-family:'Courier New',monospace;font-size:11px">05/20/2026</td><td></td></tr>
+                <tr><td><a class="task-link">Borrower: Provide LOE for $20K wire transfer</a></td><td>Borrower</td><td style="font-family:'Courier New',monospace;font-size:11px">05/25/2026</td><td></td></tr>
+                <tr><td><a class="task-link">Schedule appraisal inspection</a></td><td>—</td><td style="font-family:'Courier New',monospace;font-size:11px">05/22/2026</td><td><button class="btn btn-secondary" style="padding:3px 8px;font-size:11px">Assign</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="col-side">
+          <div class="key-dates-panel">
+            <div class="kd-title">Key Dates</div>
+            <div class="kd-row"><span class="kd-label">Application</span><span class="kd-val">2026-05-01</span></div>
+            <div class="kd-row"><span class="kd-label">Credit Pull</span><span class="kd-val">2026-05-01</span></div>
+            <div class="kd-row"><span class="kd-label">Intent to Proceed</span><span class="kd-val">2026-05-01</span></div>
+            <div class="kd-row"><span class="kd-label">Est. Closing</span><span class="kd-val">2026-06-15</span></div>
+            <div class="kd-row"><span class="kd-label">Last Updated</span><span class="kd-val">2026-05-13</span></div>
+          </div>
+          <div class="key-dates-panel" style="margin-top:12px">
+            <div class="kd-title">Loan Summary</div>
+            <div class="kd-row"><span class="kd-label">Loan Amount</span><span class="kd-val">$420,000</span></div>
+            <div class="kd-row"><span class="kd-label">Property Value</span><span class="kd-val">$538,000</span></div>
+            <div class="kd-row"><span class="kd-label">Cash to Close</span><span class="kd-val">$124,800</span></div>
+            <div class="kd-row"><span class="kd-label">Reserves</span><span class="kd-val">3.2 months</span></div>
+            <div class="kd-row"><span class="kd-label">Rate</span><span class="kd-val">6.875%</span></div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  if(t==='liabilities') {
+    el.innerHTML = `
+      <div class="section-title">Mortgage Liabilities</div>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead><tr><th>ID</th><th>Creditor</th><th>Property Address</th><th>Monthly Pmt</th><th>Balance</th><th>Link Status</th></tr></thead>
+          <tbody>
+            <tr>
+              <td style="font-family:'Courier New',monospace;font-size:11px">LIAB-001</td>
+              <td>Chase Home Lending</td>
+              <td>456 Maple Ave, Decatur GA 30030</td>
+              <td style="font-family:'Courier New',monospace;font-size:11px">$1,840</td>
+              <td style="font-family:'Courier New',monospace;font-size:11px">$287,000</td>
+              <td><span class="link-status"><span class="check-green"></span> Linked to PROP-002</span></td>
+            </tr>
+            <tr>
+              <td style="font-family:'Courier New',monospace;font-size:11px">LIAB-002</td>
+              <td>Wells Fargo Home Mortgage</td>
+              <td>123 Birchwood Ln, Marietta GA 30060</td>
+              <td style="font-family:'Courier New',monospace;font-size:11px">$1,240</td>
+              <td style="font-family:'Courier New',monospace;font-size:11px">$198,000</td>
+              <td>
+                <span class="link-status"><span class="warn-amber"></span> Not linked to owned property</span>
+                <div style="font-size:11px;color:#d97706;margin-top:3px">LIABILITY_LINK agent · Failed · No mortgage statement found for 123 Birchwood Ln</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  if(t==='income') {
+    const income = state.grossUpApplied ? 69600 : 67200;
+    el.innerHTML = `
+      <div class="section-title">Income Summary</div>
+      <div class="table-wrapper" style="margin-bottom:16px">
+        <table class="data-table">
+          <thead><tr><th>Source</th><th>Type</th><th>Monthly</th><th>Annual</th><th>Status</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>ABC Corporation</td>
+              <td>W-2 Employment</td>
+              <td style="font-family:'Courier New',monospace;font-size:11px">$4,800</td>
+              <td style="font-family:'Courier New',monospace;font-size:11px">$57,600</td>
+              <td><span class="status-satisfied">Verified</span></td>
+              <td style="font-size:11px;color:#6b7280">Verified via pay stubs</td>
+            </tr>
+            <tr>
+              <td>Social Security</td>
+              <td>Social Security</td>
+              <td style="font-family:'Courier New',monospace;font-size:11px">$800</td>
+              <td style="font-family:'Courier New',monospace;font-size:11px">$9,600</td>
+              <td><span class="status-pending">Verified</span></td>
+              <td>
+                ${!state.grossUpApplied ? `<div class="flag-amber">⚠ Gross-up not applied. Fannie Mae B3-3.1-09 requires 25% gross-up for non-taxable SS income. Corrected value: $12,000/yr</div>` : `<div class="flag-green">✓ Gross-up applied (×1.25). Corrected: $12,000/yr</div>`}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="data-block" style="max-width:400px">
+        <div class="data-block-title">Qualified Income Totals</div>
+        <div class="data-row"><span class="data-key">W-2 Employment</span><span class="data-val">$57,600</span></div>
+        <div class="data-row"><span class="data-key">Social Security (as calculated)</span><span class="data-val">${state.grossUpApplied ? '$12,000' : '$9,600'}</span></div>
+        <div class="data-row"><span class="data-key">Total Qualified Income</span><span class="data-val" style="color:${state.grossUpApplied?'#16a34a':'#d97706'};font-weight:600">$${income.toLocaleString()}</span></div>
+        ${!state.grossUpApplied ? `<div class="data-row"><span class="data-key">Corrected Total</span><span class="data-val" style="color:#16a34a">$69,600</span></div>` : ''}
+      </div>
+      ${!state.grossUpApplied ? `
+      <div style="margin-top:12px">
+        <div class="section-label">Apply Correction</div>
+        <div class="editable-field-row">
+          <span style="font-size:12px;color:#374151">Gross-up factor:</span>
+          <input class="edit-input" value="1.25" readonly>
+          <span style="font-size:12px;color:#374151">Corrected SS income:</span>
+          <input class="edit-input" value="$12,000" readonly>
+          <button class="btn btn-primary" onclick="applyGrossUp()">Apply correction</button>
+        </div>
+      </div>` : '<div class="inline-confirm" style="margin-top:12px;max-width:400px">✓ Gross-up correction applied by S. Ewers.</div>'}
+    `;
+  }
+
+  if(t==='assets') {
+    el.innerHTML = `
+      <div class="section-title">Bank of America Checking ****4821</div>
+      <div style="margin-bottom:12px;font-size:12px;color:#6b7280">Balance: <strong style="color:#111827;font-family:'Courier New',monospace">$34,200</strong> &nbsp;·&nbsp; Statements on file: Jan 2026, Feb 2026, Mar 2026</div>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr>
+              <td style="font-family:'Courier New',monospace;font-size:11px">2026-03-02</td>
+              <td>Direct Deposit – ABC Corporation</td>
+              <td style="font-family:'Courier New',monospace;font-size:11px">+$4,200</td>
+              <td><span class="flag-green">✓ Payroll — no flag</span></td>
+            </tr>
+            <tr style="background:#FFFBEB">
+              <td style="font-family:'Courier New',monospace;font-size:11px">2026-03-08</td>
+              <td>ACH Deposit – External Transfer</td>
+              <td style="font-family:'Courier New',monospace;font-size:11px">+$12,500</td>
+              <td>
+                <div class="flag-amber">⚠ Exceeds $10,000 threshold. No condition created.</div>
+                ${state.missingConditionCreated ? '<div style="font-size:11px;color:#16a34a;margin-top:2px">✓ COND-009 created by S. Ewers</div>' : ''}
+              </td>
+            </tr>
+            <tr>
+              <td style="font-family:'Courier New',monospace;font-size:11px">2026-03-15</td>
+              <td>Direct Deposit – ABC Corporation</td>
+              <td style="font-family:'Courier New',monospace;font-size:11px">+$4,200</td>
+              <td><span class="flag-green">✓ Payroll — no flag</span></td>
+            </tr>
+            <tr>
+              <td style="font-family:'Courier New',monospace;font-size:11px">2026-03-22</td>
+              <td>Incoming Wire Transfer</td>
+              <td style="font-family:'Courier New',monospace;font-size:11px">+$20,000</td>
+              <td><div class="flag-red">⛔ LOE condition created · COND-008</div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  if(t==='conditions') {
+    const conds = [
+      {id:'COND-001',desc:'Provide signed purchase agreement',status:'SATISFIED',doc:'DOC-003',satisfied:'2026-05-02'},
+      {id:'COND-002',desc:'Provide 2 months pay stubs',status:'SATISFIED',doc:'DOC-005',satisfied:'2026-05-03'},
+      {id:'COND-003',desc:'Provide 2024 and 2025 W-2s',status:'SATISFIED',doc:'DOC-006',satisfied:'2026-05-03'},
+      {id:'COND-004',desc:'Provide 3 months bank statements',status:'SATISFIED',doc:'DOC-008',satisfied:'2026-05-04'},
+    ];
+    el.innerHTML = `
+      <div class="section-title">Conditions</div>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead><tr><th>ID</th><th>Description</th><th>Assigned</th><th>Status</th><th>Satisfied</th></tr></thead>
+          <tbody>
+            ${conds.map(c=>`<tr>
+              <td style="font-family:'Courier New',monospace;font-size:11px">${c.id}</td>
+              <td>${c.desc}</td><td>Borrower</td>
+              <td><span class="status-satisfied">Satisfied</span></td>
+              <td style="font-family:'Courier New',monospace;font-size:11px">${c.satisfied}</td>
+            </tr>`).join('')}
+            <tr class="${state.conditionStatuses['COND-007']==='SATISFIED'?'':'highlight-row'}">
+              <td style="font-family:'Courier New',monospace;font-size:11px">COND-007</td>
+              <td>
+                Provide letter of explanation for employment gap (June–September 2024)
+                <div class="cond-doc-note">DOC-011 uploaded: employment_gap_loe.pdf · Classified ✓ · ${state.conditionStatuses['COND-007']==='SATISFIED'?'Condition satisfied':'Condition not auto-satisfied — conditionId null'}</div>
+              </td>
+              <td>Borrower</td>
+              <td><span class="${state.conditionStatuses['COND-007']==='SATISFIED'?'status-satisfied':'status-pending'}">${state.conditionStatuses['COND-007']}</span></td>
+              <td style="font-family:'Courier New',monospace;font-size:11px">${state.conditionStatuses['COND-007']==='SATISFIED'?'2026-05-13':'—'}</td>
+            </tr>
+            <tr>
+              <td style="font-family:'Courier New',monospace;font-size:11px">COND-008</td>
+              <td>Provide letter of explanation for $20,000 wire transfer received 03/22/2026</td>
+              <td>Borrower</td>
+              <td><span class="status-open">OPEN</span></td>
+              <td style="font-family:'Courier New',monospace;font-size:11px">—</td>
+            </tr>
+            ${state.missingConditionCreated ? `<tr>
+              <td style="font-family:'Courier New',monospace;font-size:11px">COND-009</td>
+              <td>Provide letter of explanation for $12,500 ACH deposit received 03/08/2026</td>
+              <td>Borrower</td>
+              <td><span class="status-open">OPEN</span></td>
+              <td style="font-family:'Courier New',monospace;font-size:11px">—</td>
+            </tr>` : ''}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  if(t==='documents') {
+    el.innerHTML = `
+      <div class="section-title">Documents</div>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead><tr><th>File</th><th>Type</th><th>Uploaded</th><th>Classification</th><th>Time to Classify</th><th>Linked To</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>drivers_license_front.pdf</td><td>GOVERNMENT_ID</td>
+              <td style="font-family:'Courier New',monospace;font-size:11px">2026-05-01 08:40</td>
+              <td><span class="status-classified">CLASSIFIED</span></td>
+              <td style="font-family:'Courier New',monospace;font-size:11px">88s</td>
+              <td>BRW-8821</td>
+            </tr>
+            <tr>
+              <td>purchase_agreement_signed.pdf</td><td>PURCHASE_AGREEMENT</td>
+              <td style="font-family:'Courier New',monospace;font-size:11px">2026-05-01 09:30</td>
+              <td><span class="status-classified">CLASSIFIED</span></td>
+              <td style="font-family:'Courier New',monospace;font-size:11px">104s</td>
+              <td>APP-1041</td>
+            </tr>
+            <tr>
+              <td>paystubs_april_may_2026.pdf</td><td>PAY_STUB</td>
+              <td style="font-family:'Courier New',monospace;font-size:11px">2026-05-02 10:15</td>
+              <td><span class="status-classified">CLASSIFIED</span></td>
+              <td style="font-family:'Courier New',monospace;font-size:11px">72s</td>
+              <td>INC-001</td>
+            </tr>
+            <tr>
+              <td>bank_stmt_jan_feb_2026.pdf</td><td>BANK_STATEMENT</td>
+              <td style="font-family:'Courier New',monospace;font-size:11px">2026-05-04 10:50</td>
+              <td><span class="status-classified">CLASSIFIED</span></td>
+              <td style="font-family:'Courier New',monospace;font-size:11px">43s</td>
+              <td>ACCT-001</td>
+            </tr>
+            <tr style="background:#FFFBEB">
+              <td>bank_stmt_march_2026.pdf</td><td style="color:#d97706">—</td>
+              <td style="font-family:'Courier New',monospace;font-size:11px">2026-05-13 10:14</td>
+              <td><span class="status-processing">PROCESSING</span><div style="font-size:10px;color:#d97706;margin-top:2px">Stuck 2h 3m — no completion event</div></td>
+              <td style="font-family:'Courier New',monospace;font-size:11px;color:#d97706">2h 3m+</td>
+              <td style="color:#dc2626">—</td>
+            </tr>
+            <tr style="background:#FFFBEB">
+              <td>employment_gap_loe.pdf</td><td>LETTER_OF_EXPLANATION_EMPLOYMENT</td>
+              <td style="font-family:'Courier New',monospace;font-size:11px">2026-05-13 11:16</td>
+              <td><span class="status-classified">CLASSIFIED</span></td>
+              <td style="font-family:'Courier New',monospace;font-size:11px">68s</td>
+              <td>
+                BRW-8821
+                <div style="font-size:10px;color:#d97706;margin-top:2px">conditionId: null — COND-007 not satisfied</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  if(t==='agent-tasks') {
+    const tasks = loanData.agentTasks;
+    const statusMap = {
+      'COMPLETED':'ts-completed','FAILED':'ts-failed','COMPLETED_WITH_ERRORS':'ts-errors',
+      'STUCK':'ts-stuck','NOT_TRIGGERED':'ts-nottriggered'
+    };
+    const statusLabel = {
+      'COMPLETED':'Completed','FAILED':'Failed','COMPLETED_WITH_ERRORS':'Completed with Errors',
+      'STUCK':'Stuck','NOT_TRIGGERED':'Not Triggered'
+    };
+    el.innerHTML = `<div class="section-title">Agent Tasks</div>` +
+      tasks.map(t2 => `
+        <div class="agent-task">
+          <div class="agent-task-header" onclick="toggleTask('${t2.id}')">
+            <div>
+              <div class="task-name">${t2.name}</div>
+              <div style="font-size:11px;color:#9ca3af;margin-top:2px">${t2.startedAt ? t2.startedAt.replace('T',' ').substring(0,19)+'Z' : 'Not started'}</div>
+            </div>
+            <span class="task-status ${statusMap[t2.status]||'ts-nottriggered'}">${statusLabel[t2.status]||t2.status}</span>
+            <span style="font-size:11px;color:#9ca3af;margin-left:6px">▾</span>
+          </div>
+          <div class="agent-task-body" id="body-${t2.id}">
+            <div class="cot-section">
+              <div class="cot-title">Objective</div>
+              <div style="font-size:12px;color:#374151;margin-bottom:8px">${t2.objective}</div>
+              <div class="cot-title">Chain of Thought</div>
+              <ul class="cot-list">
+                ${t2.chainOfThought.length ? t2.chainOfThought.map(c=>`<li>${c}</li>`).join('') : '<li style="color:#9ca3af">No chain of thought recorded — task was not triggered</li>'}
+              </ul>
+            </div>
+            ${t2.output ? `<div class="output-box"><strong>Output:</strong> ${t2.output}</div>` : ''}
+            ${t2.warning ? `<div class="warn-box"><strong>Warning:</strong> ${t2.warning}</div>` : ''}
+            ${t2.error ? `<div class="error-box"><strong>Error:</strong> ${t2.error}</div>` : ''}
+          </div>
+        </div>
+      `).join('');
+  }
+
+  if(t==='audit-trail') {
+    const trail = [...state.auditTrail].sort((a,b) => new Date(b.timestamp)-new Date(a.timestamp));
+    el.innerHTML = `<div class="section-title">Audit Trail</div>` +
+      trail.map(ev => `
+        <div class="audit-entry">
+          <div class="audit-dot dot-${ev.actor}"></div>
+          <div class="audit-ts">${ev.timestamp.replace('T',' ')}</div>
+          <div class="audit-event">${ev.event}</div>
+          <div class="audit-actor">${ev.actor}</div>
+        </div>
+      `).join('');
+  }
+
+  if(t==='loan-json') {
+    el.innerHTML = `<div class="section-title">Loan Data Object</div>
+      <div id="json-view">${syntaxHighlight(JSON.stringify(loanData,null,2))}</div>`;
+  }
+}
+
+function toggleTask(id) {
+  const body = document.getElementById('body-'+id);
+  if(body) body.classList.toggle('open');
+}
+
+function syntaxHighlight(json) {
+  return json
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function(match) {
+      let cls = 'jv-n';
+      if (/^"/.test(match)) {
+        if (/:$/.test(match)) { cls = 'jk'; } else { cls = 'jv-s'; }
+      } else if (/true|false/.test(match)) { cls = 'jv-b'; }
+      else if (/null/.test(match)) { cls = 'jv-null'; }
+      return `<span class="${cls}">${match}</span>`;
+    });
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+
+renderPipeline();
+</script>
+</body>
+</html>
