@@ -182,7 +182,7 @@ export default function App() {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden', flex: 1 }}>
       <Sidebar currentView={state.currentView} onNavigate={showView} />
       <div id="main">
         <div className={`view${state.currentView === 'pipeline' ? ' active' : ''}`} id="view-pipeline">
