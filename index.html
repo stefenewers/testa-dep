@@ -205,7 +205,7 @@ textarea.diagnosis:focus{border-color:#4F46E5}
 
 <!-- Sidebar -->
 <div id="sidebar">
-  <img src="logo.png" alt="Testa">
+  <img src="testa.png" alt="Testa">
   <div class="nav-icon active" id="nav-pipeline" title="Pipeline" onclick="showView('pipeline')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
   </div>
@@ -309,9 +309,9 @@ const loanData = {
     {"id":"INC-002","type":"SOCIAL_SECURITY","employer":null,"monthlyAmount":800,"annualAmount":9600,"annualAmountCorrected":12000,"verificationStatus":"VERIFIED","verifiedBy":"agent","verifiedAt":"2026-05-01T10:02:00Z","grossUpApplied":false,"grossUpFactor":1.25,"grossUpRequired":true,"grossUpNote":"Fannie Mae B3-3.1-09: Non-taxable SS income may be grossed up 25%. Borrower does not file taxes on SS income. Gross-up not applied by agent.","source":"ss_award_letter"}
   ],
   "assets":{"bankAccounts":[{"id":"ACCT-001","institution":"Bank of America","accountType":"CHECKING","accountNumberMasked":"****4821","balance":34200,"statementsOnFile":["bank_stmt_jan_2026.pdf","bank_stmt_feb_2026.pdf","bank_stmt_march_2026.pdf"],"transactions":[
-    {"date":"2026-03-02","description":"Direct Deposit – ABC Corporation","amount":4200,"type":"CREDIT","flagged":false,"flagReason":null,"conditionId":null},
-    {"date":"2026-03-08","description":"ACH Deposit – External Transfer","amount":12500,"type":"CREDIT","flagged":false,"flagReason":null,"conditionId":null,"agentMissed":true,"agentMissedNote":"Deposit exceeds $10,000 Fannie Mae threshold. Agent did not flag. No condition created."},
-    {"date":"2026-03-15","description":"Direct Deposit – ABC Corporation","amount":4200,"type":"CREDIT","flagged":false,"flagReason":null,"conditionId":null},
+    {"date":"2026-03-02","description":"Direct Deposit - ABC Corporation","amount":4200,"type":"CREDIT","flagged":false,"flagReason":null,"conditionId":null},
+    {"date":"2026-03-08","description":"ACH Deposit - External Transfer","amount":12500,"type":"CREDIT","flagged":false,"flagReason":null,"conditionId":null,"agentMissed":true,"agentMissedNote":"Deposit exceeds $10,000 Fannie Mae threshold. Agent did not flag. No condition created."},
+    {"date":"2026-03-15","description":"Direct Deposit - ABC Corporation","amount":4200,"type":"CREDIT","flagged":false,"flagReason":null,"conditionId":null},
     {"date":"2026-03-22","description":"Incoming Wire Transfer","amount":20000,"type":"CREDIT","flagged":true,"flagReason":"Single deposit exceeds $10,000. Fannie Mae guidelines require letter of explanation.","conditionId":"COND-008","flaggedBy":"agent","flaggedAt":"2026-05-01T10:18:00Z"}
   ]}]},
   "conditions":[
@@ -319,7 +319,7 @@ const loanData = {
     {"id":"COND-002","description":"Provide 2 months pay stubs","assignedTo":"BORROWER","status":"SATISFIED","createdAt":"2026-05-01T08:45:00Z","satisfiedAt":"2026-05-03T09:10:00Z","satisfiedBy":"agent","documentId":"DOC-005"},
     {"id":"COND-003","description":"Provide 2024 and 2025 W-2s","assignedTo":"BORROWER","status":"SATISFIED","createdAt":"2026-05-01T08:45:00Z","satisfiedAt":"2026-05-03T09:11:00Z","satisfiedBy":"agent","documentId":"DOC-006"},
     {"id":"COND-004","description":"Provide 3 months bank statements","assignedTo":"BORROWER","status":"SATISFIED","createdAt":"2026-05-01T08:45:00Z","satisfiedAt":"2026-05-04T11:00:00Z","satisfiedBy":"agent","documentId":"DOC-008"},
-    {"id":"COND-007","description":"Provide letter of explanation for employment gap (June–September 2024)","assignedTo":"BORROWER","status":"PENDING_BORROWER","createdAt":"2026-05-06T14:30:00Z","satisfiedAt":null,"satisfiedBy":null,"documentId":null,"documentUploaded":"DOC-011","documentUploadedAt":"2026-05-13T11:16:00Z","note":"Document uploaded but condition not auto-satisfied. Agent condition review ran at 11:19 AM – no entry for this condition in agent log."},
+    {"id":"COND-007","description":"Provide letter of explanation for employment gap (June-September 2024)","assignedTo":"BORROWER","status":"PENDING_BORROWER","createdAt":"2026-05-06T14:30:00Z","satisfiedAt":null,"satisfiedBy":null,"documentId":null,"documentUploaded":"DOC-011","documentUploadedAt":"2026-05-13T11:16:00Z","note":"Document uploaded but condition not auto-satisfied. Agent condition review ran at 11:19 AM - no entry for this condition in agent log."},
     {"id":"COND-008","description":"Provide letter of explanation for $20,000 wire transfer received 03/22/2026","assignedTo":"BORROWER","status":"OPEN","createdAt":"2026-05-01T10:18:00Z","satisfiedAt":null,"satisfiedBy":null,"documentId":null}
   ],
   "documents":[
@@ -331,33 +331,33 @@ const loanData = {
     {"id":"DOC-011","filename":"employment_gap_loe.pdf","type":"LETTER_OF_EXPLANATION_EMPLOYMENT","uploadedAt":"2026-05-13T11:16:00Z","uploadedBy":"borrower","classificationStatus":"CLASSIFIED","classifiedAt":"2026-05-13T11:17:08Z","classifiedBy":"doc_intelligence","linkedTo":"BRW-8821","conditionSatisfiedAt":null,"note":"Classified correctly. Condition COND-007 not satisfied. Agent condition review ran at 11:19 AM and did not process this document against COND-007."}
   ],
   "agentTasks":[
-    {"id":"TASK-001","name":"Order credit and initialize automations","objective":"Pull credit report for all borrowers, enable compliance monitoring, order closing costs","status":"COMPLETED","startedAt":"2026-05-01T08:33:00Z","completedAt":"2026-05-01T08:41:00Z","chainOfThought":["Identified 1 borrower on file: Marcus Webb (BRW-8821)","Submitted credit pull request to Equifax – awaiting response","Credit returned: Classic FICO 710, VantageScore 724. 2 mortgage tradelines, 4 open tradelines, 0 derogatory","Compliance monitoring enabled – RESPA, TRID timelines initialized","Closing cost estimate pulled from Lodestar – $11,240 estimated"],"output":"Credit pulled successfully. FICO 710. Compliance monitoring active. Closing costs estimated."},
-    {"id":"TASK-002","name":"Link mortgage liabilities to owned properties","objective":"Review mortgage liabilities pulled from credit and link each to the correct owned property using mortgage statements on file","status":"FAILED","startedAt":"2026-05-01T09:15:00Z","completedAt":"2026-05-01T09:16:44Z","chainOfThought":["Found 2 mortgage liabilities on credit report: Chase (456 Maple Ave) and Wells Fargo (123 Birchwood Ln)","Searching documents on file for mortgage statements...","Found mortgage_stmt_456maple.pdf – matched to Chase liability at 456 Maple Ave. Linked successfully.","Searching for mortgage statement for 123 Birchwood Ln – no document found matching this address","Cannot link Wells Fargo liability – no statement available. Task failed for this liability."],"output":"LIAB-001 linked to PROP-002 (456 Maple Ave). LIAB-002 (123 Birchwood Ln) could not be linked – no mortgage statement on file.","error":"MISSING_DOCUMENT: No mortgage statement found for 123 Birchwood Ln"},
+    {"id":"TASK-001","name":"Order credit and initialize automations","objective":"Pull credit report for all borrowers, enable compliance monitoring, order closing costs","status":"COMPLETED","startedAt":"2026-05-01T08:33:00Z","completedAt":"2026-05-01T08:41:00Z","chainOfThought":["Identified 1 borrower on file: Marcus Webb (BRW-8821)","Submitted credit pull request to Equifax - awaiting response","Credit returned: Classic FICO 710, VantageScore 724. 2 mortgage tradelines, 4 open tradelines, 0 derogatory","Compliance monitoring enabled - RESPA, TRID timelines initialized","Closing cost estimate pulled from Lodestar - $11,240 estimated"],"output":"Credit pulled successfully. FICO 710. Compliance monitoring active. Closing costs estimated."},
+    {"id":"TASK-002","name":"Link mortgage liabilities to owned properties","objective":"Review mortgage liabilities pulled from credit and link each to the correct owned property using mortgage statements on file","status":"FAILED","startedAt":"2026-05-01T09:15:00Z","completedAt":"2026-05-01T09:16:44Z","chainOfThought":["Found 2 mortgage liabilities on credit report: Chase (456 Maple Ave) and Wells Fargo (123 Birchwood Ln)","Searching documents on file for mortgage statements...","Found mortgage_stmt_456maple.pdf - matched to Chase liability at 456 Maple Ave. Linked successfully.","Searching for mortgage statement for 123 Birchwood Ln - no document found matching this address","Cannot link Wells Fargo liability - no statement available. Task failed for this liability."],"output":"LIAB-001 linked to PROP-002 (456 Maple Ave). LIAB-002 (123 Birchwood Ln) could not be linked - no mortgage statement on file.","error":"MISSING_DOCUMENT: No mortgage statement found for 123 Birchwood Ln"},
     {"id":"TASK-003","name":"Calculate qualified income","objective":"Calculate total qualified income from all income documents using Fannie Mae guidelines. Annualize pay stub income. Apply gross-up to non-taxable income sources where applicable.","status":"COMPLETED_WITH_ERRORS","startedAt":"2026-05-01T10:00:00Z","completedAt":"2026-05-01T10:03:22Z","chainOfThought":["Found 2 income sources: W-2 employment (ABC Corp) and Social Security","W-2 income: most recent pay stub shows $4,800/month gross. Annualized: $57,600. Verified against 2 months pay stubs.","Social Security: SS award letter shows $800/month. Annualized: $9,600. Applied standard annualization.","Total qualified income: $67,200. Added loan note with income breakdown."],"output":"Qualified income calculated: $67,200/year. W-2: $57,600. SS: $9,600.","warning":"GROSS_UP_NOT_APPLIED: Social Security income annualized at face value. Fannie Mae B3-3.1-09 permits 25% gross-up for non-taxable SS income. Gross-up was not applied. Corrected figure would be $12,000 SS / $69,600 total."},
-    {"id":"TASK-004","name":"Review assets and flag large deposits","objective":"Review all bank statements on file. Flag any single deposit or withdrawal exceeding $10,000. Create LOE conditions for flagged items. Run asset calculator and apply recommended updates.","status":"COMPLETED_WITH_ERRORS","startedAt":"2026-05-01T10:10:00Z","completedAt":"2026-05-01T10:22:00Z","chainOfThought":["Bank statements on file: Jan 2026, Feb 2026. March 2026 statement not yet available (still processing).","Reviewed Jan statement: 8 transactions. No single deposit or withdrawal exceeds $10,000.","Reviewed Feb statement: 6 transactions. No single deposit or withdrawal exceeds $10,000.","March statement classification still pending – skipped.","Found 1 flagged item in reviewed statements: $20,000 wire transfer on 03/22. Created condition COND-008.","Asset calculator run. Current balance $34,200. Reserves: 3.2 months. No updates required."],"output":"1 large deposit flagged. COND-008 created for $20,000 wire transfer. Asset calculator complete.","warning":"INCOMPLETE_REVIEW: March 2026 bank statement was not reviewed – classification still pending at time of task execution. $12,500 ACH deposit on 03/08 was not reviewed or flagged."},
+    {"id":"TASK-004","name":"Review assets and flag large deposits","objective":"Review all bank statements on file. Flag any single deposit or withdrawal exceeding $10,000. Create LOE conditions for flagged items. Run asset calculator and apply recommended updates.","status":"COMPLETED_WITH_ERRORS","startedAt":"2026-05-01T10:10:00Z","completedAt":"2026-05-01T10:22:00Z","chainOfThought":["Bank statements on file: Jan 2026, Feb 2026. March 2026 statement not yet available (still processing).","Reviewed Jan statement: 8 transactions. No single deposit or withdrawal exceeds $10,000.","Reviewed Feb statement: 6 transactions. No single deposit or withdrawal exceeds $10,000.","March statement classification still pending - skipped.","Found 1 flagged item in reviewed statements: $20,000 wire transfer on 03/22. Created condition COND-008.","Asset calculator run. Current balance $34,200. Reserves: 3.2 months. No updates required."],"output":"1 large deposit flagged. COND-008 created for $20,000 wire transfer. Asset calculator complete.","warning":"INCOMPLETE_REVIEW: March 2026 bank statement was not reviewed - classification still pending at time of task execution. $12,500 ACH deposit on 03/08 was not reviewed or flagged."},
     {"id":"TASK-005","name":"Review conditions and satisfy where possible","objective":"Review all open conditions. For each condition in PENDING_BORROWER status, check if a matching document has been uploaded. If so, review the document and satisfy the condition if it meets requirements.","status":"COMPLETED_WITH_ERRORS","startedAt":"2026-05-13T11:19:00Z","completedAt":"2026-05-13T11:21:14Z","chainOfThought":["Found 2 open conditions: COND-007 (Employment gap LOE) and COND-008 (Wire transfer LOE)","COND-008: No document uploaded. Skipping.","COND-007: Status is PENDING_BORROWER. Checking for uploaded LOE documents...","Query returned 0 documents of type LETTER_OF_EXPLANATION linked to COND-007.","No matching document found for COND-007. Skipping."],"output":"0 conditions satisfied. COND-007 and COND-008 remain open.","warning":"CONDITION_MATCH_FAILURE: DOC-011 (employment_gap_loe.pdf) was uploaded and classified as LETTER_OF_EXPLANATION_EMPLOYMENT at 11:17 AM but was not linked to COND-007. Agent query searched by conditionId linkage, not by document type match. DOC-011 conditionId field is null."},
     {"id":"TASK-006","name":"Trigger AUS after intent to proceed","objective":"After intent to proceed is recorded, rerun AUS via Fannie Mae Desktop Underwriter and update loan with findings","status":"NOT_TRIGGERED","startedAt":null,"completedAt":null,"chainOfThought":[],"output":null,"error":"WORKFLOW_TRIGGER_FAILURE: Intent to proceed recorded at 08:47 AM (APP-1046). AUS trigger automation did not fire. No task created. No error logged. Downstream tasks (income calculation, asset review) are blocked pending AUS findings."},
     {"id":"TASK-007","name":"Doc Intelligence batch classification","objective":"Classify and link all unprocessed documents uploaded in the last 24 hours","status":"STUCK","startedAt":"2026-05-13T10:14:03Z","completedAt":null,"chainOfThought":["Batch job started. 1 document queued: bank_stmt_march_2026.pdf (DOC-010)","Submitted DOC-010 to classification pipeline...","Awaiting classification result..."],"output":null,"error":"PROCESSING_TIMEOUT: Classification job for DOC-010 has been running for 2h 3m with no completion event. No error returned from classification service. Job appears stuck in processing queue."}
   ],
   "auditTrail":[
-    {"id":"EVT-001","timestamp":"2026-05-01T08:32:00Z","event":"Loan file created – APP-1041","actor":"system","actorId":"system"},
+    {"id":"EVT-001","timestamp":"2026-05-01T08:32:00Z","event":"Loan file created - APP-1041","actor":"system","actorId":"system"},
     {"id":"EVT-002","timestamp":"2026-05-01T08:33:00Z","event":"Credit order automation triggered","actor":"system","actorId":"system"},
-    {"id":"EVT-003","timestamp":"2026-05-01T08:41:00Z","event":"Credit pulled successfully – Classic FICO 710, VantageScore 724","actor":"agent","actorId":"TASK-001"},
+    {"id":"EVT-003","timestamp":"2026-05-01T08:41:00Z","event":"Credit pulled successfully - Classic FICO 710, VantageScore 724","actor":"agent","actorId":"TASK-001"},
     {"id":"EVT-004","timestamp":"2026-05-01T08:41:00Z","event":"2 mortgage liabilities imported from credit report","actor":"system","actorId":"system"},
-    {"id":"EVT-005","timestamp":"2026-05-01T09:15:00Z","event":"Agent task started – LIABILITY_LINK","actor":"agent","actorId":"TASK-002"},
+    {"id":"EVT-005","timestamp":"2026-05-01T09:15:00Z","event":"Agent task started - LIABILITY_LINK","actor":"agent","actorId":"TASK-002"},
     {"id":"EVT-006","timestamp":"2026-05-01T09:16:44Z","event":"LIAB-001 linked to 456 Maple Ave (PROP-002)","actor":"agent","actorId":"TASK-002"},
-    {"id":"EVT-007","timestamp":"2026-05-01T09:16:44Z","event":"Agent task failed – LIABILITY_LINK – MISSING_DOCUMENT: no statement for 123 Birchwood Ln","actor":"agent","actorId":"TASK-002"},
-    {"id":"EVT-008","timestamp":"2026-05-01T10:00:00Z","event":"Agent task started – INCOME_CALCULATION","actor":"agent","actorId":"TASK-003"},
+    {"id":"EVT-007","timestamp":"2026-05-01T09:16:44Z","event":"Agent task failed - LIABILITY_LINK - MISSING_DOCUMENT: no statement for 123 Birchwood Ln","actor":"agent","actorId":"TASK-002"},
+    {"id":"EVT-008","timestamp":"2026-05-01T10:00:00Z","event":"Agent task started - INCOME_CALCULATION","actor":"agent","actorId":"TASK-003"},
     {"id":"EVT-009","timestamp":"2026-05-01T10:03:22Z","event":"Qualified income set to $67,200. Warning: SS gross-up not applied.","actor":"agent","actorId":"TASK-003"},
-    {"id":"EVT-010","timestamp":"2026-05-01T10:10:00Z","event":"Agent task started – ASSET_REVIEW","actor":"agent","actorId":"TASK-004"},
-    {"id":"EVT-011","timestamp":"2026-05-01T10:18:00Z","event":"Large deposit flagged – $20,000 wire 03/22. COND-008 created.","actor":"agent","actorId":"TASK-004"},
-    {"id":"EVT-012","timestamp":"2026-05-01T10:22:00Z","event":"Asset review complete. March statement skipped – classification pending.","actor":"agent","actorId":"TASK-004"},
-    {"id":"EVT-013","timestamp":"2026-05-13T10:14:03Z","event":"Document uploaded – bank_stmt_march_2026.pdf (DOC-010)","actor":"borrower","actorId":"BRW-8821"},
-    {"id":"EVT-014","timestamp":"2026-05-13T10:14:03Z","event":"Doc Intelligence classification started – DOC-010","actor":"system","actorId":"system"},
-    {"id":"EVT-015","timestamp":"2026-05-13T11:16:00Z","event":"Document uploaded – employment_gap_loe.pdf (DOC-011)","actor":"borrower","actorId":"BRW-8821"},
+    {"id":"EVT-010","timestamp":"2026-05-01T10:10:00Z","event":"Agent task started - ASSET_REVIEW","actor":"agent","actorId":"TASK-004"},
+    {"id":"EVT-011","timestamp":"2026-05-01T10:18:00Z","event":"Large deposit flagged - $20,000 wire 03/22. COND-008 created.","actor":"agent","actorId":"TASK-004"},
+    {"id":"EVT-012","timestamp":"2026-05-01T10:22:00Z","event":"Asset review complete. March statement skipped - classification pending.","actor":"agent","actorId":"TASK-004"},
+    {"id":"EVT-013","timestamp":"2026-05-13T10:14:03Z","event":"Document uploaded - bank_stmt_march_2026.pdf (DOC-010)","actor":"borrower","actorId":"BRW-8821"},
+    {"id":"EVT-014","timestamp":"2026-05-13T10:14:03Z","event":"Doc Intelligence classification started - DOC-010","actor":"system","actorId":"system"},
+    {"id":"EVT-015","timestamp":"2026-05-13T11:16:00Z","event":"Document uploaded - employment_gap_loe.pdf (DOC-011)","actor":"borrower","actorId":"BRW-8821"},
     {"id":"EVT-016","timestamp":"2026-05-13T11:17:08Z","event":"DOC-011 classified as LETTER_OF_EXPLANATION_EMPLOYMENT","actor":"system","actorId":"doc_intelligence"},
-    {"id":"EVT-017","timestamp":"2026-05-13T11:19:00Z","event":"Agent task started – CONDITION_REVIEW","actor":"agent","actorId":"TASK-005"},
-    {"id":"EVT-018","timestamp":"2026-05-13T11:21:14Z","event":"Condition review complete. 0 conditions satisfied. DOC-011 not matched to COND-007 – conditionId field null.","actor":"agent","actorId":"TASK-005"}
+    {"id":"EVT-017","timestamp":"2026-05-13T11:19:00Z","event":"Agent task started - CONDITION_REVIEW","actor":"agent","actorId":"TASK-005"},
+    {"id":"EVT-018","timestamp":"2026-05-13T11:21:14Z","event":"Condition review complete. 0 conditions satisfied. DOC-011 not matched to COND-007 - conditionId field null.","actor":"agent","actorId":"TASK-005"}
   ]
 };
 
@@ -373,11 +373,11 @@ const loans = [
 
 // Issues state
 const issues = [
-  {id:"ISSUE-001",type:"AGENT_TASK_FAILURE",typeCls:"type-agent",severity:"High",sevCls:"sev-high",loanId:"APP-1041",borrower:"Marcus Webb",openSince:"47 minutes",title:"Liability linking agent failed – no mortgage statement found",status:"open"},
-  {id:"ISSUE-002",type:"RULE_MISFIRE",typeCls:"type-rule",severity:"High",sevCls:"sev-high",loanId:"APP-1042",borrower:"Diana Chen",openSince:"2 hours 14 minutes",title:"Social security income not grossed up – qualified income understated",status:"open"},
+  {id:"ISSUE-001",type:"AGENT_TASK_FAILURE",typeCls:"type-agent",severity:"High",sevCls:"sev-high",loanId:"APP-1041",borrower:"Marcus Webb",openSince:"47 minutes",title:"Liability linking agent failed - no mortgage statement found",status:"open"},
+  {id:"ISSUE-002",type:"RULE_MISFIRE",typeCls:"type-rule",severity:"High",sevCls:"sev-high",loanId:"APP-1042",borrower:"Diana Chen",openSince:"2 hours 14 minutes",title:"Social security income not grossed up - qualified income understated",status:"open"},
   {id:"ISSUE-003",type:"CONDITION_NOT_SATISFIED",typeCls:"type-cond",severity:"Medium",sevCls:"sev-med",loanId:"APP-1043",borrower:"James Okafor",openSince:"31 minutes",title:"Employment LOE uploaded but condition remains open",status:"open"},
-  {id:"ISSUE-004",type:"DOC_INTELLIGENCE_FAILURE",typeCls:"type-doc",severity:"Medium",sevCls:"sev-med",loanId:"APP-1043",borrower:"James Okafor",openSince:"2 hours 3 minutes",title:"Bank statement uploaded 2 hours ago – still unclassified",status:"open"},
-  {id:"ISSUE-005",type:"MISSING_CONDITION",typeCls:"type-miss",severity:"Medium",sevCls:"sev-med",loanId:"APP-1044",borrower:"Sofia Reyes",openSince:"58 minutes",title:"Agent missed $12,500 deposit – condition never created",status:"open"},
+  {id:"ISSUE-004",type:"DOC_INTELLIGENCE_FAILURE",typeCls:"type-doc",severity:"Medium",sevCls:"sev-med",loanId:"APP-1043",borrower:"James Okafor",openSince:"2 hours 3 minutes",title:"Bank statement uploaded 2 hours ago - still unclassified",status:"open"},
+  {id:"ISSUE-005",type:"MISSING_CONDITION",typeCls:"type-miss",severity:"Medium",sevCls:"sev-med",loanId:"APP-1044",borrower:"Sofia Reyes",openSince:"58 minutes",title:"Agent missed $12,500 deposit - condition never created",status:"open"},
   {id:"ISSUE-006",type:"INTEGRATION_TIMEOUT",typeCls:"type-int",severity:"High",sevCls:"sev-high",loanId:"APP-1046",borrower:"Priya Nair",openSince:"4 hours 22 minutes",title:"AUS did not run after intent to proceed recorded",status:"open"}
 ];
 
@@ -512,13 +512,13 @@ function buildInvPanel(iss) {
     ctx = `
       <div class="section-label">Agent Task Log · LIABILITY_LINK</div>
       <div class="data-block">
-        <div class="data-block-title">TASK-002 · Failed · 2026-05-01 09:15–09:16</div>
+        <div class="data-block-title">TASK-002 · Failed · 2026-05-01 09:15-09:16</div>
         <ul class="cot-list">
           <li>Found 2 mortgage liabilities on credit report: Chase (456 Maple Ave) and Wells Fargo (123 Birchwood Ln)</li>
           <li>Searching documents on file for mortgage statements...</li>
-          <li>Found mortgage_stmt_456maple.pdf – matched to Chase liability at 456 Maple Ave. Linked successfully.</li>
-          <li>Searching for mortgage statement for 123 Birchwood Ln – no document found matching this address</li>
-          <li>Cannot link Wells Fargo liability – no statement available. Task failed for this liability.</li>
+          <li>Found mortgage_stmt_456maple.pdf - matched to Chase liability at 456 Maple Ave. Linked successfully.</li>
+          <li>Searching for mortgage statement for 123 Birchwood Ln - no document found matching this address</li>
+          <li>Cannot link Wells Fargo liability - no statement available. Task failed for this liability.</li>
         </ul>
         <div class="error-text">MISSING_DOCUMENT: No mortgage statement found for 123 Birchwood Ln</div>
       </div>
@@ -538,7 +538,7 @@ function buildInvPanel(iss) {
       </div>
     `;
     actions = `<div class="action-row">
-      <button class="btn btn-primary" onclick="resolveIssue('ISSUE-001','doc-gap')">Mark as doc gap – create borrower task</button>
+      <button class="btn btn-primary" onclick="resolveIssue('ISSUE-001','doc-gap')">Mark as doc gap - create borrower task</button>
       <button class="btn btn-secondary" onclick="resolveIssue('ISSUE-001','rerun')">Re-run agent with manual doc link</button>
       <button class="btn btn-danger" onclick="openEscModal('ISSUE-001')">Escalate to Engineering</button>
     </div>`;
@@ -549,7 +549,7 @@ function buildInvPanel(iss) {
     ctx = `
       <div class="section-label">Agent Task Note · INCOME_CALCULATION</div>
       <div class="data-block">
-        <div class="data-block-title">TASK-003 · Completed with Errors · 2026-05-01 10:00–10:03</div>
+        <div class="data-block-title">TASK-003 · Completed with Errors · 2026-05-01 10:00-10:03</div>
         <ul class="cot-list">
           <li>Found 2 income sources: W-2 employment (ABC Corp) and Social Security</li>
           <li>W-2 income: most recent pay stub shows $4,800/month gross. Annualized: $57,600.</li>
@@ -591,7 +591,7 @@ function buildInvPanel(iss) {
       </div>
       <div class="section-label">Condition Record · COND-007</div>
       <div class="data-block">
-        <div class="data-block-title">Provide letter of explanation for employment gap (June–September 2024)</div>
+        <div class="data-block-title">Provide letter of explanation for employment gap (June-September 2024)</div>
         <div class="data-row"><span class="data-key">Status</span><span class="data-val" style="color:#d97706">${state.conditionStatuses['COND-007']}</span></div>
         <div class="data-row"><span class="data-key">Assigned To</span><span class="data-val">BORROWER</span></div>
         <div class="data-row"><span class="data-key">Document Uploaded</span><span class="data-val">DOC-011 · employment_gap_loe.pdf</span></div>
@@ -599,7 +599,7 @@ function buildInvPanel(iss) {
       </div>
       <div class="section-label">Agent Task Log · CONDITION_REVIEW (TASK-005)</div>
       <div class="data-block">
-        <div class="data-block-title">2026-05-13 11:19–11:21 · Completed with Errors</div>
+        <div class="data-block-title">2026-05-13 11:19-11:21 · Completed with Errors</div>
         <ul class="cot-list">
           <li>Found 2 open conditions: COND-007 and COND-008</li>
           <li>COND-008: No document uploaded. Skipping.</li>
@@ -687,7 +687,7 @@ function buildInvPanel(iss) {
       <div class="data-block">
         <div class="data-row"><span class="data-key">08:47:03Z</span><span class="data-val">Borrower signed disclosures. Intent to proceed recorded. — system</span></div>
         <div class="data-row"><span class="data-key">08:47:04Z</span><span class="data-val" style="color:#dc2626">Expected: AUS trigger automation to fire. Actual: No event.</span></div>
-        <div class="data-row"><span class="data-key">08:47:05Z–present</span><span class="data-val" style="color:#dc2626">No AUS order attempt. No AUS result. No error logged.</span></div>
+        <div class="data-row"><span class="data-key">08:47:05Z-present</span><span class="data-val" style="color:#dc2626">No AUS order attempt. No AUS result. No error logged.</span></div>
       </div>
       <div class="section-label">Expected Automation Sequence</div>
       <div class="data-block">
@@ -710,8 +710,6 @@ function buildInvPanel(iss) {
       <button class="btn btn-danger" onclick="openEscModal('ISSUE-006')">Escalate to Engineering</button>
     </div>`;
   }
-
-  const st = state.issueStatuses[iss.id] || iss.status;
 
   return `
     <div class="inv-issue-header">
@@ -1005,13 +1003,13 @@ function renderTab(t) {
           <tbody>
             <tr>
               <td style="font-family:'Courier New',monospace;font-size:11px">2026-03-02</td>
-              <td>Direct Deposit – ABC Corporation</td>
+              <td>Direct Deposit - ABC Corporation</td>
               <td style="font-family:'Courier New',monospace;font-size:11px">+$4,200</td>
               <td><span class="flag-green">✓ Payroll — no flag</span></td>
             </tr>
             <tr style="background:#FFFBEB">
               <td style="font-family:'Courier New',monospace;font-size:11px">2026-03-08</td>
-              <td>ACH Deposit – External Transfer</td>
+              <td>ACH Deposit - External Transfer</td>
               <td style="font-family:'Courier New',monospace;font-size:11px">+$12,500</td>
               <td>
                 <div class="flag-amber">⚠ Exceeds $10,000 threshold. No condition created.</div>
@@ -1020,7 +1018,7 @@ function renderTab(t) {
             </tr>
             <tr>
               <td style="font-family:'Courier New',monospace;font-size:11px">2026-03-15</td>
-              <td>Direct Deposit – ABC Corporation</td>
+              <td>Direct Deposit - ABC Corporation</td>
               <td style="font-family:'Courier New',monospace;font-size:11px">+$4,200</td>
               <td><span class="flag-green">✓ Payroll — no flag</span></td>
             </tr>
@@ -1058,7 +1056,7 @@ function renderTab(t) {
             <tr class="${state.conditionStatuses['COND-007']==='SATISFIED'?'':'highlight-row'}">
               <td style="font-family:'Courier New',monospace;font-size:11px">COND-007</td>
               <td>
-                Provide letter of explanation for employment gap (June–September 2024)
+                Provide letter of explanation for employment gap (June-September 2024)
                 <div class="cond-doc-note">DOC-011 uploaded: employment_gap_loe.pdf · Classified ✓ · ${state.conditionStatuses['COND-007']==='SATISFIED'?'Condition satisfied':'Condition not auto-satisfied — conditionId null'}</div>
               </td>
               <td>Borrower</td>
@@ -1220,7 +1218,9 @@ function syntaxHighlight(json) {
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
 
-renderPipeline();
+document.addEventListener('DOMContentLoaded', function() {
+  renderPipeline();
+});
 </script>
 </body>
 </html>
