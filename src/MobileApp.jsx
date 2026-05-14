@@ -315,7 +315,7 @@ export default function MobileApp({
   const currentMuts = currentLoanId ? getMuts(loanMutations, currentLoanId) : null
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', background: '#fff', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', width: '100vw', background: '#fff', overflow: 'hidden' }}>
       {/* Persistent mobile header */}
       <div style={{
         height: 52,
@@ -371,8 +371,10 @@ export default function MobileApp({
           borderTop: '1px solid #e5e7eb',
           background: '#fff',
           flexShrink: 0,
+          height: `calc(56px + env(safe-area-inset-bottom))`,
           paddingBottom: 'env(safe-area-inset-bottom)',
-          minHeight: 56
+          alignItems: 'flex-start',
+          paddingTop: 4
         }}>
           <MobileTabBar currentView={currentView} onNavigate={showView} />
         </div>
