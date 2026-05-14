@@ -245,7 +245,7 @@ function MobileLoan({ loan, mutations, currentTab, onShowTab, onBack, actions })
             fontFamily: 'Inter,sans-serif'
           }}
         >
-          ← Back
+          ← Pipeline
         </button>
         <div style={{ fontSize: 16, fontWeight: 600, color: '#111827' }}>
           {loan.borrower.firstName} {loan.borrower.lastName}
@@ -365,20 +365,18 @@ export default function MobileApp({
           </div>
         )}
       </div>
-      {currentView !== 'loan' && (
-        <div style={{
-          display: 'flex',
-          borderTop: '1px solid #e5e7eb',
-          background: '#fff',
-          flexShrink: 0,
-          height: `calc(56px + env(safe-area-inset-bottom))`,
-          paddingBottom: 'env(safe-area-inset-bottom)',
-          alignItems: 'flex-start',
-          paddingTop: 4
-        }}>
-          <MobileTabBar currentView={currentView} onNavigate={showView} />
-        </div>
-      )}
+      <div style={{
+        display: 'flex',
+        borderTop: '1px solid #e5e7eb',
+        background: '#fff',
+        flexShrink: 0,
+        height: `calc(56px + env(safe-area-inset-bottom))`,
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        alignItems: 'flex-start',
+        paddingTop: 4
+      }}>
+        <MobileTabBar currentView={currentView} onNavigate={showView} />
+      </div>
     </div>
   )
 }
