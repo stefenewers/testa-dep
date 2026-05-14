@@ -6,6 +6,8 @@ import Pipeline from './components/Pipeline'
 import TriageQueue from './components/TriageQueue'
 import LoanFile from './components/LoanFile'
 import EscalationModal from './components/EscalationModal'
+import { useIsMobile } from './hooks/useIsMobile'
+import MobileApp from './MobileApp'
 
 const DEFAULT_MUTATIONS = {
   grossUpApplied: false,
@@ -22,6 +24,7 @@ function getMuts(loanMutations, loanId) {
 }
 
 export default function App() {
+  const isMobile = useIsMobile()
   const [state, setState] = useState({
     currentView: 'pipeline',
     currentLoanId: null,
@@ -68,6 +71,10 @@ export default function App() {
   }
 
   function selectIssue(id) {
+    if (id === null) {
+      setState(prev => ({ ...prev, selectedIssueId: null }))
+      return
+    }
     setState(prev => {
       const current = prev.issueStatuses[id]
       return {
@@ -179,6 +186,30 @@ export default function App() {
     triggerAUS,
     resolveIssue,
     saveNote
+  }
+
+  if (isMobile) {
+    return (
+      <>
+        <MobileApp
+          state={state}
+          actions={actions}
+          openLoan={openLoan}
+          showView={showView}
+          showTab={showTab}
+          selectIssue={selectIssue}
+          onOpenEscModal={setEscIssueId}
+        />
+        {escIssueId && (
+          <EscalationModal
+            issue={issuesData.find(i => i.id === escIssueId)}
+            diagnosisNote={getMuts(state.loanMutations, issuesData.find(i => i.id === escIssueId)?.loanId || '').issueNotes?.[escIssueId] || ''}
+            onClose={() => setEscIssueId(null)}
+            onSubmit={(details) => submitEscalation(escIssueId, issuesData.find(i => i.id === escIssueId).loanId, details)}
+          />
+        )}
+      </>
+    )
   }
 
   return (

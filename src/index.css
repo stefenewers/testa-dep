@@ -211,3 +211,67 @@ textarea.diagnosis:focus{border-color:#4F46E5}
 .cond-doc-note{font-size:11px;color:#d97706;margin-top:2px}
 .check-icon{color:#16a34a;font-weight:700}
 .warn-icon{color:#d97706}
+
+/* ── Mobile layout (≤768px) ── */
+@media (max-width: 768px) {
+  body {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+  }
+
+  .inv-content {
+    padding: 16px;
+    max-width: 100%;
+  }
+
+  .two-col {
+    flex-direction: column;
+  }
+
+  .col-side {
+    width: 100%;
+  }
+
+  .cards-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tabs-bar {
+    padding: 0 12px;
+  }
+
+  .tab {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  #json-view {
+    font-size: 11px;
+    padding: 12px;
+  }
+
+  .agent-task-header {
+    padding: 10px 12px;
+  }
+
+  .modal {
+    width: 95vw;
+    max-height: 90vh;
+    margin: auto;
+  }
+}
