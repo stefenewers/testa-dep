@@ -1,5 +1,48 @@
 import { useState } from 'react'
 
+function syntaxHighlight(json) {
+  return json
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(
+      /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+      match => {
+        let cls = 'jv-n'
+        if (/^"/.test(match)) cls = /:$/.test(match) ? 'jk' : 'jv-s'
+        else if (/true|false/.test(match)) cls = 'jv-b'
+        else if (/null/.test(match)) cls = 'jv-null'
+        return `<span class="${cls}">${match}</span>`
+      }
+    )
+}
+
+const JSON_BLOCK = {
+  background: '#1e1e2e', borderRadius: '6px', padding: '12px 14px',
+  fontFamily: "'Courier New',monospace", fontSize: '11px', lineHeight: '1.7',
+  overflowX: 'auto', whiteSpace: 'pre', color: '#cdd6f4', marginBottom: '8px'
+}
+
+const AUS_REQUEST = {
+  request_type: 'AUS_SUBMISSION', loan_id: 'APP-1046', borrower_id: 'BRW-9903',
+  submitted_at: null, status: 'NOT_SUBMITTED', trigger_event: 'INTENT_TO_PROCEED',
+  trigger_recorded_at: '2026-05-13T08:47:03Z', trigger_fired: false,
+  payload: {
+    loan_amount: 640000, loan_purpose: 'PURCHASE', loan_type: 'CONVENTIONAL', ltv: 0.80,
+    borrower: { first_name: 'Priya', last_name: 'Nair', ssn: '***-**-4428', fico: 760 },
+    property: {
+      address: '1055 Pacific Heights Rd', city: 'San Francisco',
+      state: 'CA', zip: '94115', property_type: 'SINGLE_FAMILY', occupancy: 'PRIMARY_RESIDENCE'
+    },
+    income: { total_qualified_income: null, status: 'PENDING_AUS_FINDINGS' }
+  }
+}
+
+const AUS_RESPONSE = {
+  response_type: 'AUS_FINDINGS', loan_id: 'APP-1046', du_case_id: null, submitted_at: null,
+  findings: { recommendation: null, risk_class: null, eligible: null },
+  conditions: [], status: 'NOT_RECEIVED',
+  error: 'WORKFLOW_TRIGGER_FAILURE -- submission was never initiated'
+}
+
 function DR({ k, v, vc }) {
   return (
     <div className="data-row">
@@ -379,6 +422,23 @@ export default function InvestigationPanel({
           <DR k="Asset Review" v="Blocked - awaiting DU findings" vc="#d97706" />
           <DR k="Time Open" v={issue.openSince} vc="#dc2626" />
         </DataBlock>
+        <div className="section-label">Expected Integration Payload</div>
+        <div style={{ fontSize: '11.5px', color: '#6b7280', marginBottom: 6 }}>Expected Request Payload</div>
+        <div
+          style={JSON_BLOCK}
+          dangerouslySetInnerHTML={{ __html: syntaxHighlight(JSON.stringify(AUS_REQUEST, null, 2)) }}
+        />
+        <div style={{
+          background: '#FFFBEB', border: '1px solid #fde68a', borderRadius: 6,
+          padding: '8px 12px', fontSize: '12px', color: '#92400e', margin: '8px 0 10px'
+        }}>
+          Neither payload was transmitted. The workflow trigger did not fire after intent to proceed was recorded. This is the data gap the engineering team needs to investigate.
+        </div>
+        <div style={{ fontSize: '11.5px', color: '#6b7280', marginBottom: 6 }}>Expected Response Schema</div>
+        <div
+          style={JSON_BLOCK}
+          dangerouslySetInnerHTML={{ __html: syntaxHighlight(JSON.stringify(AUS_RESPONSE, null, 2)) }}
+        />
         {ausTask && (
           <>
             <div className="section-label">Agent Task Record - {ausTask.id}</div>

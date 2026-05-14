@@ -8,6 +8,8 @@ import LoanFile from './components/LoanFile'
 import EscalationModal from './components/EscalationModal'
 import { useIsMobile } from './hooks/useIsMobile'
 import MobileApp from './MobileApp'
+import TestCases from './components/TestCases'
+import WorkflowDocs from './components/WorkflowDocs'
 
 const DEFAULT_MUTATIONS = {
   grossUpApplied: false,
@@ -151,6 +153,21 @@ export default function App() {
     addAuditEntry(loanId, `AUS manually triggered for ${loanId}. DU submission queued.`, 'analyst', 'S. Ewers')
   }
 
+  function openIssueInTriage(issueId) {
+    setState(prev => {
+      const current = prev.issueStatuses[issueId]
+      return {
+        ...prev,
+        currentView: 'triage',
+        selectedIssueId: issueId,
+        issueStatuses: {
+          ...prev.issueStatuses,
+          [issueId]: (!current || current === 'open') ? 'investigating' : current
+        }
+      }
+    })
+  }
+
   function resolveIssue(issueId, loanId, action, diagnosis) {
     setIssueStatus(issueId, 'resolved')
     const note = diagnosis ? ` Diagnosis: ${diagnosis}` : ''
@@ -199,6 +216,7 @@ export default function App() {
           showTab={showTab}
           selectIssue={selectIssue}
           onOpenEscModal={setEscIssueId}
+          openIssueInTriage={openIssueInTriage}
         />
         {escIssueId && (
           <EscalationModal
@@ -242,6 +260,12 @@ export default function App() {
               actions={actions}
             />
           )}
+        </div>
+        <div className={`view${state.currentView === 'test-cases' ? ' active' : ''}`} id="view-test-cases">
+          <TestCases onOpenIssue={openIssueInTriage} />
+        </div>
+        <div className={`view${state.currentView === 'workflow-docs' ? ' active' : ''}`} id="view-workflow-docs">
+          <WorkflowDocs />
         </div>
       </div>
       {escIssueId && (

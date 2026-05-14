@@ -34,6 +34,29 @@ export default function Sidebar({ currentView, onNavigate }) {
           <polyline points="10 9 9 9 8 9"/>
         </svg>
       </div>
+      <div
+        className={`nav-icon${currentView === 'test-cases' ? ' active' : ''}`}
+        title="Test Cases"
+        onClick={() => onNavigate('test-cases')}
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+          <rect x="9" y="3" width="6" height="4" rx="1"/>
+          <line x1="9" y1="12" x2="15" y2="12"/>
+          <line x1="9" y1="16" x2="13" y2="16"/>
+          <polyline points="8.5 11.5 9.5 12.5 11.5 10.5"/>
+        </svg>
+      </div>
+      <div
+        className={`nav-icon${currentView === 'workflow-docs' ? ' active' : ''}`}
+        title="Workflow Docs"
+        onClick={() => onNavigate('workflow-docs')}
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+        </svg>
+      </div>
     </div>
   )
 }

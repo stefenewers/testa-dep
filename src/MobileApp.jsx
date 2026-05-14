@@ -1,6 +1,9 @@
+import { useState } from 'react'
 import { loansData } from './data/loans'
 import { issuesData, pipelineLoans } from './data/issues'
 import InvestigationPanel from './components/InvestigationPanel'
+import TestCases from './components/TestCases'
+import WorkflowDocs from './components/WorkflowDocs'
 import Overview from './components/tabs/Overview'
 import Liabilities from './components/tabs/Liabilities'
 import Income from './components/tabs/Income'
@@ -37,11 +40,11 @@ function getMuts(loanMutations, loanId) {
   return loanMutations[loanId] || DEFAULT_MUTATIONS
 }
 
-function MobileTabBar({ currentView, onNavigate }) {
-  const tabs = [
+function MobileTabBar({ currentView, onNavigate, showMore, onToggleMore }) {
+  const isMoreActive = showMore || currentView === 'test-cases' || currentView === 'workflow-docs'
+  const mainTabs = [
     {
-      id: 'pipeline',
-      label: 'Pipeline',
+      id: 'pipeline', label: 'Pipeline',
       icon: (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 20, height: 20 }}>
           <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
@@ -50,8 +53,7 @@ function MobileTabBar({ currentView, onNavigate }) {
       )
     },
     {
-      id: 'triage',
-      label: 'Triage',
+      id: 'triage', label: 'Triage',
       icon: (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 20, height: 20 }}>
           <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
@@ -60,8 +62,7 @@ function MobileTabBar({ currentView, onNavigate }) {
       )
     },
     {
-      id: 'loan',
-      label: 'Loan File',
+      id: 'loan', label: 'Loan File',
       icon: (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 20, height: 20 }}>
           <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
@@ -74,7 +75,7 @@ function MobileTabBar({ currentView, onNavigate }) {
   ]
   return (
     <>
-      {tabs.map(tab => (
+      {mainTabs.map(tab => (
         <div
           key={tab.id}
           onClick={() => onNavigate(tab.id)}
@@ -82,13 +83,26 @@ function MobileTabBar({ currentView, onNavigate }) {
             flex: 1, display: 'flex', flexDirection: 'column',
             alignItems: 'center', justifyContent: 'center', gap: 3,
             cursor: 'pointer',
-            color: currentView === tab.id ? '#4F46E5' : '#9ca3af'
+            color: currentView === tab.id && !showMore ? '#4F46E5' : '#9ca3af'
           }}
         >
           {tab.icon}
           <span style={{ fontSize: 10, fontWeight: 500 }}>{tab.label}</span>
         </div>
       ))}
+      <div
+        onClick={onToggleMore}
+        style={{
+          flex: 1, display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center', gap: 3,
+          cursor: 'pointer', color: isMoreActive ? '#4F46E5' : '#9ca3af'
+        }}
+      >
+        <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 20, height: 20 }}>
+          <circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>
+        </svg>
+        <span style={{ fontSize: 10, fontWeight: 500 }}>More</span>
+      </div>
     </>
   )
 }
@@ -308,30 +322,27 @@ function MobileLoan({ loan, mutations, currentTab, onShowTab, onBack, actions })
 
 export default function MobileApp({
   state, actions,
-  openLoan, showView, showTab, selectIssue, onOpenEscModal
+  openLoan, showView, showTab, selectIssue, onOpenEscModal, openIssueInTriage
 }) {
+  const [showMore, setShowMore] = useState(false)
   const { currentView, currentLoanId, currentTab, selectedIssueId, issueStatuses, loanMutations } = state
   const currentLoan = currentLoanId ? loansData[currentLoanId] : null
   const currentMuts = currentLoanId ? getMuts(loanMutations, currentLoanId) : null
+
+  function navigate(v) {
+    showView(v)
+    setShowMore(false)
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', width: '100vw', background: '#fff', overflow: 'hidden' }}>
       {/* Persistent mobile header */}
       <div style={{
-        height: 52,
-        borderBottom: '1px solid #e5e7eb',
-        background: '#fff',
-        display: 'flex',
-        alignItems: 'center',
-        paddingLeft: 16,
-        flexShrink: 0,
-        paddingTop: 'env(safe-area-inset-top)'
+        height: 52, borderBottom: '1px solid #e5e7eb', background: '#fff',
+        display: 'flex', alignItems: 'center', paddingLeft: 16,
+        flexShrink: 0, paddingTop: 'env(safe-area-inset-top)'
       }}>
-        <img
-          src="/testa.png"
-          alt="Testa"
-          style={{ height: 22, width: 44, objectFit: 'contain', objectPosition: 'center' }}
-        />
+        <img src="/testa.png" alt="Testa" style={{ height: 22, width: 44, objectFit: 'contain', objectPosition: 'center' }} />
       </div>
       <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         {currentView === 'pipeline' && (
@@ -355,7 +366,7 @@ export default function MobileApp({
             mutations={currentMuts}
             currentTab={currentTab}
             onShowTab={showTab}
-            onBack={() => showView('pipeline')}
+            onBack={() => navigate('pipeline')}
             actions={actions}
           />
         )}
@@ -364,18 +375,61 @@ export default function MobileApp({
             No loan selected. Go to Pipeline to open a loan.
           </div>
         )}
+        {currentView === 'test-cases' && (
+          <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <TestCases onOpenIssue={(id) => { openIssueInTriage(id); setShowMore(false) }} />
+          </div>
+        )}
+        {currentView === 'workflow-docs' && (
+          <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <WorkflowDocs />
+          </div>
+        )}
       </div>
+      {showMore && (
+        <div style={{ background: '#fff', borderTop: '1px solid #e5e7eb', flexShrink: 0 }}>
+          <div
+            onClick={() => navigate('test-cases')}
+            style={{
+              padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12,
+              cursor: 'pointer', borderBottom: '1px solid #f3f4f6',
+              color: currentView === 'test-cases' ? '#4F46E5' : '#374151'
+            }}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18, flexShrink: 0 }}>
+              <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+              <rect x="9" y="3" width="6" height="4" rx="1"/>
+              <line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/>
+            </svg>
+            <span style={{ fontSize: 14, fontWeight: 500 }}>Test Cases</span>
+          </div>
+          <div
+            onClick={() => navigate('workflow-docs')}
+            style={{
+              padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12,
+              cursor: 'pointer',
+              color: currentView === 'workflow-docs' ? '#4F46E5' : '#374151'
+            }}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18, flexShrink: 0 }}>
+              <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+            </svg>
+            <span style={{ fontSize: 14, fontWeight: 500 }}>Workflow Docs</span>
+          </div>
+        </div>
+      )}
       <div style={{
-        display: 'flex',
-        borderTop: '1px solid #e5e7eb',
-        background: '#fff',
-        flexShrink: 0,
-        height: `calc(56px + env(safe-area-inset-bottom))`,
-        paddingBottom: 'env(safe-area-inset-bottom)',
-        alignItems: 'flex-start',
-        paddingTop: 4
+        display: 'flex', borderTop: '1px solid #e5e7eb', background: '#fff',
+        flexShrink: 0, height: `calc(56px + env(safe-area-inset-bottom))`,
+        paddingBottom: 'env(safe-area-inset-bottom)', alignItems: 'flex-start', paddingTop: 4
       }}>
-        <MobileTabBar currentView={currentView} onNavigate={showView} />
+        <MobileTabBar
+          currentView={currentView}
+          onNavigate={navigate}
+          showMore={showMore}
+          onToggleMore={() => setShowMore(prev => !prev)}
+        />
       </div>
     </div>
   )
