@@ -316,6 +316,23 @@ export default function MobileApp({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', background: '#fff', overflow: 'hidden' }}>
+      {/* Persistent mobile header */}
+      <div style={{
+        height: 52,
+        borderBottom: '1px solid #e5e7eb',
+        background: '#fff',
+        display: 'flex',
+        alignItems: 'center',
+        paddingLeft: 16,
+        flexShrink: 0,
+        paddingTop: 'env(safe-area-inset-top)'
+      }}>
+        <img
+          src="/testa.png"
+          alt="Testa"
+          style={{ height: 22, width: 44, objectFit: 'contain', objectPosition: 'center' }}
+        />
+      </div>
       <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         {currentView === 'pipeline' && (
           <MobilePipeline loans={pipelineLoans} onOpenLoan={openLoan} />
@@ -350,8 +367,12 @@ export default function MobileApp({
       </div>
       {currentView !== 'loan' && (
         <div style={{
-          height: 56, display: 'flex', borderTop: '1px solid #e5e7eb',
-          background: '#fff', flexShrink: 0
+          display: 'flex',
+          borderTop: '1px solid #e5e7eb',
+          background: '#fff',
+          flexShrink: 0,
+          paddingBottom: 'env(safe-area-inset-bottom)',
+          minHeight: 56
         }}>
           <MobileTabBar currentView={currentView} onNavigate={showView} />
         </div>
