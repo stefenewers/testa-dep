@@ -1,3 +1,5 @@
+import { useIsMobile } from '../hooks/useIsMobile'
+
 const TEST_CASES = [
   {
     id: 'TC-001', area: 'Liability Linking',
@@ -61,35 +63,40 @@ const TEST_CASES = [
   }
 ]
 
-function StatusBadge({ status, issueId, onOpenIssue }) {
+function StatusBadge({ status, onNavigate }) {
   const isPass = status.startsWith('Pass')
+  const isReview = status === 'In Review'
   const isFail = status.startsWith('Fail')
-  const bg = isPass ? '#F0FDF4' : isFail ? '#FEF2F2' : '#FFFBEB'
-  const color = isPass ? '#16a34a' : isFail ? '#dc2626' : '#d97706'
-  const baseStyle = {
-    display: 'inline-flex', alignItems: 'center', gap: 3,
-    background: bg, color, fontSize: 11, fontWeight: 600,
-    padding: '2px 8px', borderRadius: 4, whiteSpace: 'nowrap'
-  }
+  const issueMatch = status.match(/ISSUE-\d+/)
 
-  if (isFail && issueId && onOpenIssue) {
-    return (
-      <span style={baseStyle}>
-        Fail —{' '}
-        <span
-          onClick={() => onOpenIssue(issueId)}
-          style={{ textDecoration: 'underline', cursor: 'pointer' }}
-        >
-          {issueId}
-        </span>
-      </span>
-    )
-  }
-
-  return <span style={baseStyle}>{status}</span>
+  return (
+    <span
+      style={{
+        background: isPass ? '#F0FDF4' : isReview ? '#FFFBEB' : '#FEF2F2',
+        color: isPass ? '#16a34a' : isReview ? '#d97706' : '#dc2626',
+        fontSize: 11, fontWeight: 600,
+        padding: '2px 8px', borderRadius: 4,
+        cursor: issueMatch ? 'pointer' : 'default',
+        textDecoration: issueMatch ? 'underline' : 'none',
+        whiteSpace: 'nowrap',
+        display: 'inline-block'
+      }}
+      onClick={() => {
+        if (issueMatch && onNavigate) onNavigate('triage', issueMatch[0])
+      }}
+    >
+      {status}
+    </span>
+  )
 }
 
 export default function TestCases({ onOpenIssue }) {
+  const isMobile = useIsMobile()
+
+  function handleNavigate(view, issueId) {
+    if (view === 'triage' && issueId) onOpenIssue(issueId)
+  }
+
   return (
     <>
       <div className="view-header">
@@ -98,44 +105,72 @@ export default function TestCases({ onOpenIssue }) {
           Loan pipeline workflow coverage — 10 test cases
         </span>
       </div>
-      <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
-        <div className="table-wrapper">
-          <table className="data-table" style={{ tableLayout: 'fixed', width: '100%' }}>
-            <colgroup>
-              <col style={{ width: '70px' }} />
-              <col style={{ width: '130px' }} />
-              <col style={{ width: '28%' }} />
-              <col style={{ width: '32%' }} />
-              <col style={{ width: '130px' }} />
-            </colgroup>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Workflow Area</th>
-                <th>Test Description</th>
-                <th>Expected Behavior</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {TEST_CASES.map(tc => (
-                <tr key={tc.id}>
-                  <td>
-                    <span style={{ fontFamily: "'Courier New',monospace", fontSize: 12, color: '#4F46E5', fontWeight: 600 }}>
-                      {tc.id}
-                    </span>
-                  </td>
-                  <td style={{ fontSize: 12, color: '#374151' }}>{tc.area}</td>
-                  <td style={{ fontSize: 12, color: '#374151', lineHeight: 1.5 }}>{tc.desc}</td>
-                  <td style={{ fontSize: 12, color: '#6b7280', lineHeight: 1.5 }}>{tc.expected}</td>
-                  <td>
-                    <StatusBadge status={tc.status} issueId={tc.issueId} onOpenIssue={onOpenIssue} />
-                  </td>
+      <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '0' : '24px' }}>
+        {isMobile ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            {TEST_CASES.map(tc => (
+              <div key={tc.id} style={{ padding: '14px 16px', borderBottom: '1px solid #f3f4f6', background: '#fff' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <span style={{ fontFamily: "'Courier New',monospace", fontSize: 12, color: '#4F46E5', fontWeight: 600 }}>
+                    {tc.id}
+                  </span>
+                  <StatusBadge status={tc.status} onNavigate={handleNavigate} />
+                </div>
+                <div style={{ fontSize: 11, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
+                  {tc.area}
+                </div>
+                <div style={{ fontSize: 13, color: '#374151', marginBottom: 6, lineHeight: 1.4 }}>
+                  {tc.desc}
+                </div>
+                <div style={{
+                  background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 4,
+                  padding: '6px 10px', fontSize: 11.5, color: '#6b7280', lineHeight: 1.4
+                }}>
+                  <span style={{ fontWeight: 600, color: '#374151' }}>Expected: </span>
+                  {tc.expected}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="table-wrapper">
+            <table className="data-table" style={{ tableLayout: 'fixed', width: '100%' }}>
+              <colgroup>
+                <col style={{ width: '70px' }} />
+                <col style={{ width: '130px' }} />
+                <col style={{ width: '28%' }} />
+                <col style={{ width: '32%' }} />
+                <col style={{ width: '130px' }} />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Workflow Area</th>
+                  <th>Test Description</th>
+                  <th>Expected Behavior</th>
+                  <th>Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {TEST_CASES.map(tc => (
+                  <tr key={tc.id}>
+                    <td>
+                      <span style={{ fontFamily: "'Courier New',monospace", fontSize: 12, color: '#4F46E5', fontWeight: 600 }}>
+                        {tc.id}
+                      </span>
+                    </td>
+                    <td style={{ fontSize: 12, color: '#374151' }}>{tc.area}</td>
+                    <td style={{ fontSize: 12, color: '#374151', lineHeight: 1.5 }}>{tc.desc}</td>
+                    <td style={{ fontSize: 12, color: '#6b7280', lineHeight: 1.5 }}>{tc.expected}</td>
+                    <td>
+                      <StatusBadge status={tc.status} onNavigate={handleNavigate} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </>
   )
